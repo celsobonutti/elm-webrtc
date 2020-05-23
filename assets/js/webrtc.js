@@ -1,13 +1,17 @@
-export function setVideoStream(id, stream) {
-  let videoElement = document.querySelector("#" + id);
+import { createChannel } from './socket';
 
-  videoElement.srcObject = stream;
-}
+const iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
 
-export async function startLocalCamera() {
-  const localStream = await navigator.mediaDevices.getUserMedia({
-    audio: true,
-    video: true,
-  });
-  setVideoStream("localCamera", localStream);
-}
+export const createWebRtcConnection = (config) => {
+  const { channel, presence, sendMessage } = createChannel();
+
+  const peerConnections = new Map();
+
+  presence.onJoin((id, current, newPres) => {
+    if(!current){
+      
+    } else {
+      console.log("user additional presence", newPres)
+    }
+  })
+};

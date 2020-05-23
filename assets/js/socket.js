@@ -1,17 +1,34 @@
-import { Socket } from "phoenix";
+import { Socket, Presence } from 'phoenix';
 
-let socket = new Socket("/socket", { params: { token: window.userToken } });
+let socket = new Socket('/socket', { params: { token: window.userToken } });
 
 socket.connect();
 
-let channel = socket.channel("video:peer2peer", {});
-channel
-  .join()
-  .receive("ok", (resp) => {
-    console.log("Joined successfully", resp);
-  })
-  .receive("error", (resp) => {
-    console.log("Unable to join", resp);
-  });
+export const createChannel = (room = 'video:peer2peer') => {
+  const channel = socket.channel(room, {});
+  channel
+    .join()
+    .receive('ok', (resp) => {
+      console.log('Joined successfully', resp);
+    })
+    .receive('error', (resp) => {
+      console.log('Unable to join', resp);
+    });
 
-export default channel;
+  const sendMessage = (type, content) => {
+    channel.push('peer-message', {
+      body: JSON.stringify({
+        type,
+        content,
+      }),
+    });
+  };
+
+  const presence = Presence(channel);
+
+  return {
+    channel,
+    presence,
+    sendMessage,
+  };
+};

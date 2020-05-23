@@ -13,25 +13,13 @@ import "../css/app.scss";
 //     import socket from "./socket"
 //
 import "phoenix_html";
-import { startLocalCamera } from "./webrtc";
+
+import { createWebRtcClient } from "./webrtc";
+
+let client = createWebRtcClient();
 
 import { Elm } from "../elm/Main.elm";
-import { Socket } from "phoenix";
-
-let socket = new Socket("/socket", { params: { token: window.userToken } });
 
 const app = Elm.Main.init({
   node: document.querySelector("main"),
 });
-
-app.ports.localStream.subscribe(function (message) {
-  if (message === "start") {
-    const localStream = new MediaStream();
-    startLocalCamera();
-  } else {
-  }
-});
-
-// socket.addEventListener("message", function (event) {
-//   app.ports.messageReceiver.send(event.data);
-// });
