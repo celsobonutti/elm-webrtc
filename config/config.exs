@@ -7,8 +7,8 @@
 # General application configuration
 use Mix.Config
 
-config :elm_webrtc,
-  ecto_repos: [ElmWebrtc.Repo]
+# config :elm_webrtc,
+#   ecto_repos: [ElmWebrtc.Repo]
 
 # Configures the endpoint
 config :elm_webrtc, ElmWebrtcWeb.Endpoint,

@@ -8,7 +8,7 @@ defmodule ElmWebrtc.Application do
   def start(_type, _args) do
     children = [
       # Start the Ecto repository
-      ElmWebrtc.Repo,
+      # ElmWebrtc.Repo,
       # Start the Telemetry supervisor
       ElmWebrtcWeb.Telemetry,
       # Start the PubSub system
