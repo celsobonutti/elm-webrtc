@@ -1,12 +1,28 @@
-.roomSelection {
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500&display=swap');
+
+:root {
+  --primary-color: rgb(0, 140, 255);
+  --success-color: rgb(108, 180, 0);
+  --error-color: rgb(230, 80, 80);
+  --disabled-color: rgb(139, 139, 139);
+}
+
+body {
+  font-family: 'Work Sans', sans-serif;
+}
+
+.room {
   min-height: 100vh;
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+}
 
-  &__form {
-    display: flex;
+.search {
+  &__label {
+    display: block;
+    margin: 1em 0;
   }
 
   &__input {
@@ -19,12 +35,25 @@
   }
 
   &__button {
-    background-color: rgb(0, 140, 255);
+    background-color: var(--primary-color);
     border: none;
     border-radius: 4px;
     color: white;
     font-weight: bold;
     font-size: 1rem;
     padding: 0.8em 2em;
+    height: 100%;
+
+    &:disabled {
+      background-color: grey;
+    }
+
+    &--success {
+      background-color: var(--success-color);
+    }
+
+    &--error {
+      background-color: var(--error-color);
+    }
   }
 }
