@@ -40,6 +40,20 @@ module.exports = (env, options) => {
             'css-loader',
             'sass-loader',
           ],
+        },
+        {
+          test: /\.elm$/,
+          exclude: [/elm-stuff/, /node_modules/],
+          use: [
+            { loader: 'elm-hot-webpack-loader' },  
+            {
+              loader: 'elm-webpack-loader',
+              options: {
+                cwd: __dirname,
+                optimize: !devMode
+              }
+            }
+          ]
         }
       ]
     },
