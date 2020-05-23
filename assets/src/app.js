@@ -14,9 +14,9 @@ import "../css/app.scss";
 //
 import "phoenix_html";
 
-import { createWebRtcClient } from "./webrtc";
+import { createWebRtcConnection, startLocalStream } from "./webrtc.ts";
 
-let client = createWebRtcClient();
+let client = startLocalStream();
 
 import { Elm } from "../elm/Main.elm";
 

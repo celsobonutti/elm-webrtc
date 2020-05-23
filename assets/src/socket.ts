@@ -1,8 +1,14 @@
 import { Socket, Presence } from 'phoenix';
 
+//@ts-ignore -- Phoenix userToken
 let socket = new Socket('/socket', { params: { token: window.userToken } });
 
 socket.connect();
+
+export type WebRTCMessageSender = (
+  type: string,
+  content: RTCIceCandidate | RTCOfferOptions
+) => void;
 
 export const createChannel = (room = 'video:peer2peer') => {
   const channel = socket.channel(room, {});
@@ -15,7 +21,7 @@ export const createChannel = (room = 'video:peer2peer') => {
       console.log('Unable to join', resp);
     });
 
-  const sendMessage = (type, content) => {
+  const sendMessage: WebRTCMessageSender = (type, content) => {
     channel.push('peer-message', {
       body: JSON.stringify({
         type,
@@ -24,7 +30,7 @@ export const createChannel = (room = 'video:peer2peer') => {
     });
   };
 
-  const presence = Presence(channel);
+  const presence = new Presence(channel);
 
   return {
     channel,

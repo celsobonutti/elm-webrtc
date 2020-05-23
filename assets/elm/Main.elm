@@ -80,7 +80,7 @@ view model =
                 []
             , formButton model
             ]
-        , userVideo "localCamera" True
+        , userVideo "local-camera" True
         ]
 
 
