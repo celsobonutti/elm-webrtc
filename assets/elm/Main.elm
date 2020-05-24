@@ -83,6 +83,7 @@ view model =
             , formButton model
             ]
         , userVideo "local-camera" True
+        , userVideo "remote-camera" False
         ]
 
 

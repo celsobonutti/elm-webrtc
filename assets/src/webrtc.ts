@@ -4,6 +4,7 @@ type WebRTCConfig = {
   onRemoteJoin: Function;
   onRemoteLeave: Function;
   roomId: string;
+  onTrack: (track: RTCTrackEvent) => void;
 };
 
 const startLocalStream = async (stream: MediaStream) => {
@@ -14,29 +15,66 @@ const startLocalStream = async (stream: MediaStream) => {
 };
 
 export const createWebRtcConnection = async (config: WebRTCConfig) => {
-  const { presence, sendMessage } = createChannel(config.roomId);
-
   const localStreamMedia = await navigator.mediaDevices.getUserMedia({
     audio: true,
     video: true,
   });
 
+  const peerConnection = new RTCPeerConnection();
+
   startLocalStream(localStreamMedia);
+
+  const onRemoteOffer = async (offer: RTCSessionDescriptionInit) => {
+    await peerConnection.setRemoteDescription(offer);
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    sendMessage({ type: 'video-answer', content: answer });
+  };
+
+  const onRemoteAnswer = async (answer: RTCSessionDescriptionInit) => {
+    await peerConnection.setRemoteDescription(answer);
+  };
+
+  const onIceCandidate = async (content: RTCIceCandidate) => {
+    await peerConnection.addIceCandidate(content);
+  };
+
+  const { presence, sendMessage } = createChannel(config.roomId, {
+    onIceCandidate,
+    onRemoteOffer,
+    onRemoteAnswer,
+  });
+
+  peerConnection.onicecandidate = ({ candidate }) => {
+    if (candidate) {
+      sendMessage({ type: 'ice-candidate', content: candidate });
+    }
+  };
+
+  peerConnection.ontrack = (track) => {
+    config.onTrack(track);
+  };
 
   const peerMap = new Map();
 
-  const onTrack = (stream: readonly MediaStream[]) => {
-    console.log(stream);
-  };
+  presence.onJoin(async (id, current, newPres) => {
+    localStreamMedia
+      .getTracks()
+      .forEach((track) => peerConnection.addTrack(track, localStreamMedia));
 
-  presence.onJoin((id, current, newPres) => {
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    sendMessage({ type: 'video-offer', content: offer });
+
     if (!current) {
       config.onRemoteJoin(id);
-
-      const peerConnection = createPeerConnection(sendMessage, onTrack);
-
+      const peerConnection = await createPeerConnection(
+        sendMessage,
+        () => {},
+        localStreamMedia
+      );
       peerMap.set(id, peerConnection);
-
       peerConnection.setLocalStream(localStreamMedia);
     } else {
       console.log('user additional presence', newPres);
@@ -44,7 +82,7 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
   });
 
   presence.onLeave((id, current) => {
-    if (!current) {
+    if (current) {
       const disconnectedPeer = peerMap.get(id);
       disconnectedPeer?.close();
       peerMap.delete(id);
@@ -56,9 +94,10 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
   });
 };
 
-const createPeerConnection = (
+const createPeerConnection = async (
   sendMessage: WebRTCMessageSender,
-  onTrack: (streams: readonly MediaStream[]) => void
+  onTrack: (streams: readonly MediaStream[]) => void,
+  localStreamMedia: MediaStream
 ) => {
   const peerConnection = new RTCPeerConnection({
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
@@ -71,7 +110,7 @@ const createPeerConnection = (
   // __THE PERFECT__ negotiation
   peerConnection.onicecandidate = ({ candidate }) => {
     if (candidate) {
-      sendMessage('ice-candidate', candidate);
+      sendMessage({ type: 'ice-candidate', content: candidate });
     }
   };
 
@@ -87,7 +126,10 @@ const createPeerConnection = (
       await peerConnection.setLocalDescription(offer);
 
       if (peerConnection.localDescription) {
-        sendMessage('video-offer', peerConnection.localDescription);
+        sendMessage({
+          type: 'video-offer',
+          content: peerConnection.localDescription,
+        });
       }
     } catch (error) {
       console.error('[NEGOTIATION]: ' + error);
@@ -102,7 +144,6 @@ const createPeerConnection = (
         peerConnection.addTrack(track, localStream);
       }
     },
-    // Close the connection with the peer.
     close: () => {
       peerConnection.close();
     },
