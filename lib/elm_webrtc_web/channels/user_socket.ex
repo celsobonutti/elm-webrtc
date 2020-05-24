@@ -2,7 +2,7 @@ defmodule ElmWebrtcWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  channel "video:*", ElmWebRtcWeb.VideoChannel
+  channel "videoroom:*", ElmWebRtcWeb.VideoChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After

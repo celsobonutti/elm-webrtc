@@ -2,7 +2,7 @@ import { Socket, Presence } from 'phoenix';
 import { v4 as uuid } from 'uuid';
 
 //@ts-ignore -- Phoenix userToken
-let socket = new Socket('/socket', { params: { user_id:  uuid()} });
+let socket = new Socket('/socket', { params: { user_id: uuid() } });
 
 socket.connect();
 
@@ -11,8 +11,8 @@ export type WebRTCMessageSender = (
   content: RTCIceCandidate | RTCOfferOptions | RTCSessionDescription
 ) => void;
 
-export const createChannel = (room = 'video:peer2peer') => {
-  const channel = socket.channel(room, {});
+export const createChannel = (room: string = 'string') => {
+  const channel = socket.channel(`videoroom:${room}`, {});
   channel
     .join()
     .receive('ok', (resp) => {

@@ -3,6 +3,7 @@ import { createChannel, WebRTCMessageSender } from './socket';
 type WebRTCConfig = {
   onRemoteJoin: Function;
   onRemoteLeave: Function;
+  roomId: string;
 };
 
 const startLocalStream = async (stream: MediaStream) => {
@@ -13,7 +14,7 @@ const startLocalStream = async (stream: MediaStream) => {
 };
 
 export const createWebRtcConnection = async (config: WebRTCConfig) => {
-  const { presence, sendMessage } = createChannel();
+  const { presence, sendMessage } = createChannel(config.roomId);
 
   const localStreamMedia = await navigator.mediaDevices.getUserMedia({
     audio: true,
@@ -24,7 +25,9 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
 
   const peerMap = new Map();
 
-  const onTrack = (stream: readonly MediaStream[]) => {};
+  const onTrack = (stream: readonly MediaStream[]) => {
+    console.log(stream);
+  };
 
   presence.onJoin((id, current, newPres) => {
     if (!current) {
@@ -42,9 +45,13 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
 
   presence.onLeave((id, current) => {
     if (!current) {
+      const disconnectedPeer = peerMap.get(id);
+      disconnectedPeer?.close();
+      peerMap.delete(id);
+
       config.onRemoteLeave(id);
     } else {
-      console.log('user leaved in one of the devices');
+      console.log('user left in one of the devices');
     }
   });
 };

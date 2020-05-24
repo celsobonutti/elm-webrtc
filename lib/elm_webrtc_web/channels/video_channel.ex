@@ -2,7 +2,7 @@ defmodule ElmWebRtcWeb.VideoChannel do
   use Phoenix.Channel
   alias ElmWebrtcWeb.Presence
 
-  def join("video:peer2peer", _message, socket) do
+  def join("videoroom:" <> _channel, _message, socket) do
     send(self(), :after_join)
     {:ok, socket}
   end
