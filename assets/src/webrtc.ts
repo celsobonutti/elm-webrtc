@@ -30,58 +30,82 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
 
   const peerMap = new Map();
 
-  const presence = new Presence(channel);
+  let presences = {};
 
-  presence.onSync(() => {
-    console.info(presence.list())
-  })
-
-  presence.onJoin(async (id, current, newPres) => {
-    if (id === userId) return;
-    if (!current) {
-      const peerConnection = await createPeerConnection(
+  const onJoin = async (id: string | undefined) => {
+    if (id && id !== userId) {
+      const { peerConnection } = await createPeerConnection({
         channel,
+        localStreamMedia,
+        onTrack: config.onTrack,
+        peerId: userId,
         sendMessage,
-        config.onTrack,
-        localStreamMedia
-      );
+      });
+
       peerMap.set(id, peerConnection);
-    } else {
+
+      config.onRemoteJoin(id);
     }
+  };
+
+  const onLeave = async (id: string | undefined) => {
+    const disconnectedPeer = peerMap.get(id);
+    disconnectedPeer?.close();
+    peerMap.delete(id);
+
+    config.onRemoteLeave(id);
+  };
+
+  channel.on('presence_diff', (diff) => {
+    presences = Presence.syncDiff(presences, diff, onJoin, onLeave);
   });
 
-  presence.onLeave((id, current) => {
-    if (current) {
-      const disconnectedPeer = peerMap.get(id);
-      disconnectedPeer?.close();
-      peerMap.delete(id);
+  channel.on('peer-message', async (payload) => {
+    const body = JSON.parse(payload.body) as WebRTCMessage;
 
-      config.onRemoteLeave(id);
-    } else {
-      console.log('user left in one of the devices');
+    if (body.type === 'video-offer') {
+      const { peerConnection } = await createPeerConnection({
+        channel,
+        localStreamMedia,
+        onTrack: config.onTrack,
+        peerId: userId,
+        sendMessage,
+      });
+
+      await peerConnection.setRemoteDescription(body.content);
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+      sendMessage({ type: 'video-answer', content: answer, peerId: userId });
+
+      peerMap.set(userId, peerConnection);
     }
   });
 };
 
-const createPeerConnection = async (
-  channel: Channel,
-  sendMessage: WebRTCMessageSender,
-  onTrack: (streams: readonly MediaStream[]) => void,
-  localStreamMedia: MediaStream
-) => {
+type PeerConnectionArgs = {
+  channel: Channel;
+  sendMessage: WebRTCMessageSender;
+  peerId: string;
+  onTrack: (streams: readonly MediaStream[]) => void;
+  localStreamMedia: MediaStream;
+};
+
+const createPeerConnection = async ({
+  channel,
+  sendMessage,
+  peerId,
+  onTrack,
+}: PeerConnectionArgs) => {
   const peerConnection = new RTCPeerConnection({
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
   });
 
-  const start = async () => {
-    try {
-      for (const track of localStreamMedia.getTracks()) {
-        peerConnection.addTrack(track);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: true,
+    video: true,
+  });
+
+  stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream));
 
   peerConnection.ontrack = ({ track, streams }) => {
     track.onunmute = () => {
@@ -93,7 +117,7 @@ const createPeerConnection = async (
 
   peerConnection.onicecandidate = ({ candidate }) => {
     if (candidate) {
-      sendMessage({ type: 'ice-candidate', content: candidate });
+      sendMessage({ type: 'ice-candidate', content: candidate, peerId });
     }
   };
 
@@ -102,7 +126,7 @@ const createPeerConnection = async (
       makingOffer = true;
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
-      sendMessage({ type: 'video-offer', content: offer });
+      sendMessage({ type: 'video-offer', content: offer, peerId });
     } catch (err) {
       console.error('[NEGOTIATION NEEDED] ' + err);
     } finally {
@@ -118,16 +142,8 @@ const createPeerConnection = async (
         case 'video-answer':
           await peerConnection.setRemoteDescription(body.content);
           break;
-        case 'video-offer':
-          if (makingOffer || peerConnection.signalingState !== 'stable') return;
-          await peerConnection.setRemoteDescription(body.content);
-          const answer = await peerConnection.createAnswer();
-          await peerConnection.setLocalDescription(answer);
-          sendMessage({ type: 'video-answer', content: answer });
-          break;
 
         case 'ice-candidate':
-          console.info(body.content);
           await peerConnection.addIceCandidate(body.content);
           break;
       }
@@ -136,5 +152,7 @@ const createPeerConnection = async (
     }
   });
 
-  start();
+  return {
+    peerConnection,
+  };
 };

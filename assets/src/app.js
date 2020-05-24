@@ -14,8 +14,8 @@ const app = Elm.Main.init({
 
 app.ports.enterRoom.subscribe((message) => {
   let client = createWebRtcConnection({
-    onRemoteJoin: (e) => console.info(e),
-    onRemoteLeave: (e) => console.info(e),
+    onRemoteJoin: (e) => {},
+    onRemoteLeave: (e) => {},
     roomId: message,
     onTrack: (streams) => {
       const remoteVideo = document.querySelector('#remote-camera');

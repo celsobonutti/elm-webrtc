@@ -1,4 +1,4 @@
-import { Socket } from 'phoenix';
+import { Socket, Presence } from 'phoenix';
 
 type IceCandidateMessage = {
   type: 'ice-candidate';
@@ -15,10 +15,11 @@ type RTCAnswerMessage = {
   content: RTCSessionDescriptionInit;
 };
 
-export type WebRTCMessage =
+export type WebRTCMessage = (
   | IceCandidateMessage
   | RTCOfferMessage
-  | RTCAnswerMessage;
+  | RTCAnswerMessage
+) & {peerId: string};
 
 export type WebRTCMessageSender = (message: WebRTCMessage) => void;
 
@@ -28,20 +29,14 @@ export const createChannel = (room: string = 'string', userId: string) => {
   socket.connect();
 
   const channel = socket.channel(`videoroom:${room}`, {});
-  channel
-    .join()
-    .receive('ok', (resp) => {
-      console.log('Joined successfully', resp);
-    })
-    .receive('error', (resp) => {
-      console.log('Unable to join', resp);
-    });
+  channel.join();
 
-  const sendMessage: WebRTCMessageSender = ({ type, content }) => {
+  const sendMessage: WebRTCMessageSender = ({ type, content, peerId }) => {
     channel.push('peer-message', {
       body: JSON.stringify({
         type,
         content,
+        peerId
       }),
     });
   };
