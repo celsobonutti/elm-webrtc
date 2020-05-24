@@ -1,9 +1,4 @@
-import { Socket, Presence } from 'phoenix';
-import { v4 as uuid } from 'uuid';
-
-let socket = new Socket('/socket', { params: { user_id: uuid() } });
-
-socket.connect();
+import { Socket } from 'phoenix';
 
 type IceCandidateMessage = {
   type: 'ice-candidate';
@@ -20,20 +15,18 @@ type RTCAnswerMessage = {
   content: RTCSessionDescriptionInit;
 };
 
-type WebRTCMessage = IceCandidateMessage | RTCOfferMessage | RTCAnswerMessage;
+export type WebRTCMessage =
+  | IceCandidateMessage
+  | RTCOfferMessage
+  | RTCAnswerMessage;
 
 export type WebRTCMessageSender = (message: WebRTCMessage) => void;
 
-type Callbacks = {
-  onRemoteOffer: (offer: RTCSessionDescriptionInit) => void;
-  onIceCandidate: (candidate: RTCIceCandidate) => void;
-  onRemoteAnswer: (answer: RTCSessionDescriptionInit) => void;
-};
+export const createChannel = (room: string = 'string', userId: string) => {
+  let socket = new Socket('/socket', { params: { user_id: userId } });
 
-export const createChannel = (
-  room: string = 'string',
-  { onRemoteOffer, onIceCandidate, onRemoteAnswer }: Callbacks
-) => {
+  socket.connect();
+
   const channel = socket.channel(`videoroom:${room}`, {});
   channel
     .join()
@@ -53,27 +46,8 @@ export const createChannel = (
     });
   };
 
-  const presence = new Presence(channel);
-
-  channel.on('peer-message', (payload) => {
-    const body = JSON.parse(payload.body) as WebRTCMessage;
-
-    switch (body.type) {
-      case 'ice-candidate':
-        onIceCandidate(body.content);
-        break;
-      case 'video-offer':
-        onRemoteOffer(body.content);
-        break;
-      case 'video-answer':
-        onRemoteAnswer(body.content);
-        break;
-    }
-  });
-
   return {
     channel,
-    presence,
     sendMessage,
   };
 };

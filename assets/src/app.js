@@ -17,11 +17,10 @@ app.ports.enterRoom.subscribe((message) => {
     onRemoteJoin: (e) => console.info(e),
     onRemoteLeave: (e) => console.info(e),
     roomId: message,
-    onTrack: (track) => {
+    onTrack: (streams) => {
       const remoteVideo = document.querySelector('#remote-camera');
       if (!remoteVideo.srcObject) {
-        console.log("hihihi");
-        remoteVideo.srcObject = track.streams[0];
+        remoteVideo.srcObject = streams[0];
       }
     },
   });

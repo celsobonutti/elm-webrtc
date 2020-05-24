@@ -5,6 +5,7 @@ import Html exposing (..)
 import Html.Attributes as HA
 import Html.Events exposing (onInput, onSubmit)
 import Json.Encode as Encode
+import Set exposing (Set)
 
 
 main : Program () Model Msg
@@ -18,17 +19,20 @@ main =
 
 
 port enterRoom : String -> Cmd msg
+port remotePeerJoined : (String -> msg) -> Sub msg
+port remotePeerLeft : (String -> msg) -> Sub msg
 
 
 type alias Model =
     { textInput : String
     , currentRoom : Maybe String
+    , peers : Set String
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { textInput = "", currentRoom = Nothing }
+    ( { textInput = "", currentRoom = Nothing, peers = Set.empty }
     , Cmd.none
     )
 
