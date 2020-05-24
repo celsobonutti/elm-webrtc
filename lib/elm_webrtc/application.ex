@@ -14,9 +14,10 @@ defmodule ElmWebrtc.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: ElmWebrtc.PubSub},
       # Start the Endpoint (http/https)
-      ElmWebrtcWeb.Endpoint
+      ElmWebrtcWeb.Endpoint,
       # Start a worker by calling: ElmWebrtc.Worker.start_link(arg)
       # {ElmWebrtc.Worker, arg}
+      ElmWebrtcWeb.Presence
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

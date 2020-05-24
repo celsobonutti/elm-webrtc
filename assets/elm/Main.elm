@@ -1,10 +1,11 @@
-port module Main exposing (..)
+port module Main exposing (main)
 
 import Browser
 import Html exposing (..)
 import Html.Attributes as HA
-import Html.Events exposing (..)
-import Json.Encode as Encode exposing (Value)
+import Html.Events exposing (onInput, onSubmit)
+import Json.Encode as Encode
+
 
 main : Program () Model Msg
 main =
@@ -16,7 +17,8 @@ main =
         }
 
 
-port localStream : String -> Cmd msg
+port enterRoom : String -> Cmd msg
+
 
 type alias Model =
     { textInput : String
@@ -46,7 +48,7 @@ update msg model =
 
         Connect ->
             ( { model | currentRoom = Just model.textInput }
-            , localStream "start"
+            , enterRoom model.textInput
             )
 
 
@@ -116,7 +118,7 @@ userVideo userId muted =
         ]
         [ source
             [ HA.src ""
-            , HA.type_ "video.mp4"
+            , HA.type_ "video/mp4"
             , HA.id userId
             ]
             []

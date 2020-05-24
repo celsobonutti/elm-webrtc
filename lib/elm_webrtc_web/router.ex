@@ -16,7 +16,7 @@ defmodule ElmWebrtcWeb.Router do
   scope "/", ElmWebrtcWeb do
     pipe_through :browser
 
-    get "/*path", PageController, :index
+    get "/", PageController, :index
   end
 
   # Other scopes may use custom stacks.

@@ -5,20 +5,24 @@ type WebRTCConfig = {
   onRemoteLeave: Function;
 };
 
-export const startLocalStream = async () => {
+const startLocalStream = async (stream: MediaStream) => {
+  const localCamera = document.querySelector(
+    '#local-camera'
+  ) as HTMLVideoElement;
+  localCamera.srcObject = stream;
+};
+
+export const createWebRtcConnection = async (config: WebRTCConfig) => {
+  const { presence, sendMessage } = createChannel();
+
   const localStreamMedia = await navigator.mediaDevices.getUserMedia({
     audio: true,
     video: true,
   });
 
-  const localCamera = document.querySelector('#local-camera') as HTMLVideoElement;
-  localCamera.srcObject = localStreamMedia;
-};
+  startLocalStream(localStreamMedia);
 
-export const createWebRtcConnection = async (config: WebRTCConfig) => {
-  const { channel, presence, sendMessage } = createChannel();
-
-  const peerConnections = new Map();
+  const peerMap = new Map();
 
   const onTrack = (stream: readonly MediaStream[]) => {};
 
@@ -27,6 +31,10 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
       config.onRemoteJoin(id);
 
       const peerConnection = createPeerConnection(sendMessage, onTrack);
+
+      peerMap.set(id, peerConnection);
+
+      peerConnection.setLocalStream(localStreamMedia);
     } else {
       console.log('user additional presence', newPres);
     }
@@ -49,13 +57,47 @@ const createPeerConnection = (
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
   });
 
+  peerConnection.ontrack = ({ streams }) => {
+    onTrack(streams);
+  };
+
+  // __THE PERFECT__ negotiation
   peerConnection.onicecandidate = ({ candidate }) => {
     if (candidate) {
       sendMessage('ice-candidate', candidate);
     }
   };
 
-  peerConnection.ontrack = ({ streams }) => {
-    onTrack(streams);
+  let makingOffer = false;
+  let ignoreOffer = false;
+  peerConnection.onnegotiationneeded = async () => {
+    try {
+      makingOffer = true;
+      const offer = await peerConnection.createOffer();
+
+      if (peerConnection.signalingState == 'stable') return;
+
+      await peerConnection.setLocalDescription(offer);
+
+      if (peerConnection.localDescription) {
+        sendMessage('video-offer', peerConnection.localDescription);
+      }
+    } catch (error) {
+      console.error('[NEGOTIATION]: ' + error);
+    } finally {
+      makingOffer = false;
+    }
+  };
+
+  return {
+    setLocalStream: (localStream: MediaStream) => {
+      for (const track of localStream.getTracks()) {
+        peerConnection.addTrack(track, localStream);
+      }
+    },
+    // Close the connection with the peer.
+    close: () => {
+      peerConnection.close();
+    },
   };
 };

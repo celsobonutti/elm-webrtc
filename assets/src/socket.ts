@@ -1,13 +1,14 @@
 import { Socket, Presence } from 'phoenix';
+import { v4 as uuid } from 'uuid';
 
 //@ts-ignore -- Phoenix userToken
-let socket = new Socket('/socket', { params: { token: window.userToken } });
+let socket = new Socket('/socket', { params: { user_id:  uuid()} });
 
 socket.connect();
 
 export type WebRTCMessageSender = (
   type: string,
-  content: RTCIceCandidate | RTCOfferOptions
+  content: RTCIceCandidate | RTCOfferOptions | RTCSessionDescription
 ) => void;
 
 export const createChannel = (room = 'video:peer2peer') => {
