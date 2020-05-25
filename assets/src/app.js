@@ -12,16 +12,31 @@ const app = Elm.Main.init({
   node: document.querySelector('main'),
 });
 
-app.ports.enterRoom.subscribe((message) => {
+app.ports.enterRoom.subscribe(async (message) => {
+  const localStreamMedia = await navigator.mediaDevices.getUserMedia({
+    audio: true,
+    video: true,
+  });
+
+  const localCamera = document.querySelector('#local-camera');
+
+  localCamera.srcObject = localStreamMedia;
+
   let client = createWebRtcConnection({
-    onRemoteJoin: (e) => {},
-    onRemoteLeave: (e) => {},
+    onRemoteJoin: (id) => {},
+    onRemoteLeave: (id) => {
+      app.ports.remotePeerLeft.send(id);
+    },
     roomId: message,
-    onTrack: (streams) => {
-      const remoteVideo = document.querySelector('#remote-camera');
-      if (!remoteVideo.srcObject) {
-        remoteVideo.srcObject = streams[0];
-      }
+    onTrack: (streams, id) => {
+      app.ports.remotePeerJoined.send(id);
+
+      setTimeout(() => {
+        let remoteVideo = document.querySelector(`[data-uuid="${id}"]`);
+        if (!remoteVideo.srcObject) {
+          remoteVideo.srcObject = streams[0];
+        }
+      }, 1000); // TO-DO: Promise with cancellation (Fluture?)
     },
   });
 });

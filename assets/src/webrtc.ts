@@ -6,25 +6,11 @@ type WebRTCConfig = {
   onRemoteJoin: Function;
   onRemoteLeave: Function;
   roomId: string;
-  onTrack: (stream: readonly MediaStream[]) => void;
-};
-
-const startLocalStream = async (stream: MediaStream) => {
-  const localCamera = document.querySelector(
-    '#local-camera'
-  ) as HTMLVideoElement;
-  localCamera.srcObject = stream;
+  onTrack: (stream: readonly MediaStream[], peerId: string) => void;
 };
 
 export const createWebRtcConnection = async (config: WebRTCConfig) => {
   const userId = uuid();
-
-  const localStreamMedia = await navigator.mediaDevices.getUserMedia({
-    audio: true,
-    video: true,
-  });
-
-  startLocalStream(localStreamMedia);
 
   const { channel, sendMessage } = createChannel(config.roomId, userId);
 
@@ -36,9 +22,8 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
     if (id && id !== userId) {
       const { peerConnection } = await createPeerConnection({
         channel,
-        localStreamMedia,
-        onTrack: config.onTrack,
-        peerId: userId,
+        onTrack: (stream) => config.onTrack(stream, id),
+        senderId: userId,
         sendMessage,
       });
 
@@ -66,9 +51,8 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
     if (body.type === 'video-offer') {
       const { peerConnection } = await createPeerConnection({
         channel,
-        localStreamMedia,
-        onTrack: config.onTrack,
-        peerId: userId,
+        onTrack: (stream) => config.onTrack(stream, body.peerId),
+        senderId: userId,
         sendMessage,
       });
 
@@ -85,27 +69,33 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
 type PeerConnectionArgs = {
   channel: Channel;
   sendMessage: WebRTCMessageSender;
-  peerId: string;
+  senderId: string;
   onTrack: (streams: readonly MediaStream[]) => void;
-  localStreamMedia: MediaStream;
 };
 
 const createPeerConnection = async ({
   channel,
   sendMessage,
-  peerId,
+  senderId,
   onTrack,
 }: PeerConnectionArgs) => {
   const peerConnection = new RTCPeerConnection({
-    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' }
+    ],
   });
 
-  const stream = await navigator.mediaDevices.getUserMedia({
+  const localStreamMedia = await navigator.mediaDevices.getUserMedia({
     audio: true,
-    video: true,
+    video: {
+      height: 360,
+      width: 640
+    },
   });
 
-  stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream));
+  localStreamMedia
+    .getTracks()
+    .forEach((track) => peerConnection.addTrack(track, localStreamMedia));
 
   peerConnection.ontrack = ({ track, streams }) => {
     track.onunmute = () => {
@@ -117,7 +107,11 @@ const createPeerConnection = async ({
 
   peerConnection.onicecandidate = ({ candidate }) => {
     if (candidate) {
-      sendMessage({ type: 'ice-candidate', content: candidate, peerId });
+      sendMessage({
+        type: 'ice-candidate',
+        content: candidate,
+        peerId: senderId,
+      });
     }
   };
 
@@ -126,7 +120,7 @@ const createPeerConnection = async ({
       makingOffer = true;
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
-      sendMessage({ type: 'video-offer', content: offer, peerId });
+      sendMessage({ type: 'video-offer', content: offer, peerId: senderId });
     } catch (err) {
       console.error('[NEGOTIATION NEEDED] ' + err);
     } finally {

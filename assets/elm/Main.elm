@@ -40,6 +40,8 @@ init _ =
 type Msg
     = TextChange String
     | Connect
+    | PeerJoined String
+    | PeerLeft String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -56,9 +58,24 @@ update msg model =
             )
 
 
+        PeerJoined peerId ->
+            ( { model | peers = Set.insert peerId model.peers}
+            , Cmd.none
+            )
+
+        
+        PeerLeft peerId ->
+            ( { model | peers = Set.remove peerId model.peers }
+            , Cmd.none
+            )
+
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.none
+subscriptions _ =
+    Sub.batch
+        [ remotePeerJoined PeerJoined
+        , remotePeerLeft PeerLeft
+        ]
+
 
 
 view : Model -> Html Msg
@@ -86,8 +103,7 @@ view model =
                 []
             , formButton model
             ]
-        , userVideo "local-camera" True
-        , userVideo "remote-camera" False
+        , div [ HA.class "videos"] (userVideo "local-camera" True "" :: peerVideos model.peers)
         ]
 
 
@@ -114,12 +130,15 @@ formButton model =
                 [ text "Change" ]
 
 
-userVideo : String -> Bool -> Html Msg
-userVideo userId muted =
+userVideo : String -> Bool -> String -> Html Msg
+userVideo userId muted uuid =
     video
         [ HA.id userId
         , HA.autoplay True
         , HA.property "muted" (Encode.bool muted)
+        , HA.attribute "data-UUID" uuid
+        , HA.height 240
+        , HA.width 420
         ]
         [ source
             [ HA.src ""
@@ -128,3 +147,13 @@ userVideo userId muted =
             ]
             []
         ]
+
+generateRemoteUserId : Int -> String
+generateRemoteUserId index =
+    "remote-peer" ++ String.fromInt index
+
+
+peerVideos : Set String -> List (Html Msg)
+peerVideos peers =
+    let peerList = Set.toList peers in
+    List.indexedMap(\index -> \peer -> userVideo (generateRemoteUserId index) False peer) peerList
