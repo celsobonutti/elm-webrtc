@@ -173,8 +173,6 @@ generateRemoteUserId index =
 
 peerVideos : OrderedSet String -> List ( String, Html Msg )
 peerVideos peers =
-    let
-        peerList =
-            OrderedSet.toList peers
-    in
-    List.indexedMap (\index -> \peer -> ( peer, userVideo (generateRemoteUserId index) False peer )) peerList
+    peers
+        |> OrderedSet.toList
+        |> List.indexedMap (\index -> \peer -> ( peer, userVideo (generateRemoteUserId index) False peer ))
