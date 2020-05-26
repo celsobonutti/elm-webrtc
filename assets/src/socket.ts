@@ -19,7 +19,7 @@ export type WebRTCMessage = (
   | IceCandidateMessage
   | RTCOfferMessage
   | RTCAnswerMessage
-) & {peerId: string};
+) & { senderId: string; targetId: string };
 
 export type WebRTCMessageSender = (message: WebRTCMessage) => void;
 
@@ -31,12 +31,18 @@ export const createChannel = (room: string = 'string', userId: string) => {
   const channel = socket.channel(`videoroom:${room}`, {});
   channel.join();
 
-  const sendMessage: WebRTCMessageSender = ({ type, content, peerId }) => {
+  const sendMessage: WebRTCMessageSender = ({
+    type,
+    content,
+    senderId,
+    targetId,
+  }) => {
     channel.push('peer-message', {
       body: JSON.stringify({
         type,
         content,
-        peerId
+        senderId,
+        targetId
       }),
     });
   };

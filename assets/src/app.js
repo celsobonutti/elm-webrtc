@@ -23,6 +23,7 @@ app.ports.enterRoom.subscribe(async (message) => {
   localCamera.srcObject = localStreamMedia;
 
   let client = createWebRtcConnection({
+    localStreamMedia,
     onRemoteJoin: (id) => {},
     onRemoteLeave: (id) => {
       app.ports.remotePeerLeft.send(id);
