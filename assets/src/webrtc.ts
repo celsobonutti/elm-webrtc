@@ -1,151 +1,172 @@
-import { createChannel, WebRTCMessageSender } from './socket';
+import { createChannel, WebRTCMessageSender, WebRTCMessage } from './socket';
+import { Channel, Presence } from 'phoenix';
+import { v4 as uuid } from 'uuid';
 
 type WebRTCConfig = {
+  localStreamMedia: MediaStream;
   onRemoteJoin: Function;
   onRemoteLeave: Function;
   roomId: string;
-  onTrack: (track: RTCTrackEvent) => void;
-};
-
-const startLocalStream = async (stream: MediaStream) => {
-  const localCamera = document.querySelector(
-    '#local-camera'
-  ) as HTMLVideoElement;
-  localCamera.srcObject = stream;
+  onTrack: (stream: readonly MediaStream[], peerId: string) => void;
 };
 
 export const createWebRtcConnection = async (config: WebRTCConfig) => {
-  const localStreamMedia = await navigator.mediaDevices.getUserMedia({
-    audio: true,
-    video: true,
-  });
+  const userId = uuid();
 
-  const peerConnection = new RTCPeerConnection();
+  const { channel, sendMessage } = createChannel(config.roomId, userId);
 
-  startLocalStream(localStreamMedia);
+  const peerMap = new Map<string, RTCPeerConnection>();
 
-  const onRemoteOffer = async (offer: RTCSessionDescriptionInit) => {
-    await peerConnection.setRemoteDescription(offer);
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    sendMessage({ type: 'video-answer', content: answer });
-  };
+  let presences = {};
 
-  const onRemoteAnswer = async (answer: RTCSessionDescriptionInit) => {
-    await peerConnection.setRemoteDescription(answer);
-  };
+  let presence = new Presence(channel);
 
-  const onIceCandidate = async (content: RTCIceCandidate) => {
-    await peerConnection.addIceCandidate(content);
-  };
-
-  const { presence, sendMessage } = createChannel(config.roomId, {
-    onIceCandidate,
-    onRemoteOffer,
-    onRemoteAnswer,
-  });
-
-  peerConnection.onicecandidate = ({ candidate }) => {
-    if (candidate) {
-      sendMessage({ type: 'ice-candidate', content: candidate });
-    }
-  };
-
-  peerConnection.ontrack = (track) => {
-    config.onTrack(track);
-  };
-
-  const peerMap = new Map();
-
-  presence.onJoin(async (id, current, newPres) => {
-    localStreamMedia
-      .getTracks()
-      .forEach((track) => peerConnection.addTrack(track, localStreamMedia));
-
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-
-    sendMessage({ type: 'video-offer', content: offer });
-
-    if (!current) {
-      config.onRemoteJoin(id);
-      const peerConnection = await createPeerConnection(
+  const onJoin = async (id: string | undefined) => {
+    if (id && id !== userId) {
+      const { peerConnection } = await createPeerConnection({
+        channel,
+        onTrack: (stream) => config.onTrack(stream, id),
+        localStreamMedia: config.localStreamMedia,
+        senderId: userId,
+        targetId: id,
         sendMessage,
-        () => {},
-        localStreamMedia
-      );
+        starting: true,
+      });
+
       peerMap.set(id, peerConnection);
-      peerConnection.setLocalStream(localStreamMedia);
-    } else {
-      console.log('user additional presence', newPres);
+
+      config.onRemoteJoin(id);
+    }
+  };
+
+  presence.onLeave(async (id: string | undefined) => {
+    if (!id) return;
+    const disconnectedPeer = peerMap.get(id);
+    disconnectedPeer?.close();
+    peerMap.delete(id);
+
+    config.onRemoteLeave(id);
+  });
+
+  channel.on('presence_diff', (diff) => {
+    presences = Presence.syncDiff(presences, diff, onJoin);
+  });
+
+  channel.on('peer-message', async (payload) => {
+    const body = JSON.parse(payload.body) as WebRTCMessage;
+
+    if (body.targetId !== userId) return;
+
+    if (body.type === 'video-offer') {
+      const { peerConnection, onVideoOffer } = await createPeerConnection({
+        channel,
+        onTrack: (stream) => config.onTrack(stream, body.senderId),
+        localStreamMedia: config.localStreamMedia,
+        senderId: userId,
+        targetId: body.senderId,
+        sendMessage,
+        starting: false,
+      });
+
+      await onVideoOffer(body.content);
+
+      peerMap.set(userId, peerConnection);
     }
   });
 
-  presence.onLeave((id, current) => {
-    if (current) {
-      const disconnectedPeer = peerMap.get(id);
-      disconnectedPeer?.close();
-      peerMap.delete(id);
-
-      config.onRemoteLeave(id);
-    } else {
-      console.log('user left in one of the devices');
-    }
+  channel.onClose(() => {
+    peerMap.forEach((connection) => {
+      connection.close();
+    });
   });
+
+  return {
+    channel,
+  };
 };
 
-const createPeerConnection = async (
-  sendMessage: WebRTCMessageSender,
-  onTrack: (streams: readonly MediaStream[]) => void,
-  localStreamMedia: MediaStream
-) => {
+type PeerConnectionArgs = {
+  channel: Channel;
+  sendMessage: WebRTCMessageSender;
+  localStreamMedia: MediaStream;
+  senderId: string;
+  targetId: string;
+  onTrack: (streams: readonly MediaStream[]) => void;
+  starting: boolean;
+};
+
+const createPeerConnection = async ({
+  channel,
+  sendMessage,
+  localStreamMedia,
+  senderId,
+  targetId,
+  onTrack,
+  starting,
+}: PeerConnectionArgs) => {
   const peerConnection = new RTCPeerConnection({
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
   });
 
-  peerConnection.ontrack = ({ streams }) => {
+  localStreamMedia
+    .getTracks()
+    .forEach((track) => peerConnection.addTrack(track, localStreamMedia));
+
+  peerConnection.ontrack = ({ track, streams }) => {
     onTrack(streams);
   };
 
-  // __THE PERFECT__ negotiation
+  if (starting) {
+    try {
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      sendMessage({ type: 'video-offer', content: offer, senderId, targetId });
+    } catch (err) {
+      console.error('[NEGOTIATION NEEDED] ' + err);
+    }
+  }
+
   peerConnection.onicecandidate = ({ candidate }) => {
     if (candidate) {
-      sendMessage({ type: 'ice-candidate', content: candidate });
+      sendMessage({
+        type: 'ice-candidate',
+        content: candidate,
+        senderId,
+        targetId,
+      });
     }
   };
 
-  let makingOffer = false;
-  let ignoreOffer = false;
-  peerConnection.onnegotiationneeded = async () => {
+  channel.on('peer-message', async (payload) => {
+    const body = JSON.parse(payload.body) as WebRTCMessage;
+
+    if (body.targetId !== senderId || body.senderId !== targetId) return;
+
     try {
-      makingOffer = true;
-      const offer = await peerConnection.createOffer();
+      switch (body.type) {
+        case 'video-answer':
+          if (peerConnection.signalingState === 'stable') return;
+          await peerConnection.setRemoteDescription(body.content);
+          break;
 
-      if (peerConnection.signalingState == 'stable') return;
-
-      await peerConnection.setLocalDescription(offer);
-
-      if (peerConnection.localDescription) {
-        sendMessage({
-          type: 'video-offer',
-          content: peerConnection.localDescription,
-        });
+        case 'ice-candidate':
+          await peerConnection.addIceCandidate(body.content);
+          break;
       }
-    } catch (error) {
-      console.error('[NEGOTIATION]: ' + error);
-    } finally {
-      makingOffer = false;
+    } catch (err) {
+      console.error(`[PEER MESSAGE] ${body.type} ${JSON.stringify(err)}`);
     }
+  });
+
+  const onVideoOffer = async (offer: RTCSessionDescriptionInit) => {
+    await peerConnection.setRemoteDescription(offer);
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    sendMessage({ type: 'video-answer', content: answer, senderId, targetId });
   };
 
   return {
-    setLocalStream: (localStream: MediaStream) => {
-      for (const track of localStream.getTracks()) {
-        peerConnection.addTrack(track, localStream);
-      }
-    },
-    close: () => {
-      peerConnection.close();
-    },
+    peerConnection,
+    onVideoOffer,
   };
 };

@@ -16,6 +16,7 @@ body {
   width: 100%;
   display: flex;
   justify-content: center;
+  flex-direction: column;
   align-items: center;
 }
 
@@ -56,4 +57,9 @@ body {
       background-color: var(--error-color);
     }
   }
+}
+
+.videos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
 }

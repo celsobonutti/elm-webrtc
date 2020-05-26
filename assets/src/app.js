@@ -12,17 +12,37 @@ const app = Elm.Main.init({
   node: document.querySelector('main'),
 });
 
-app.ports.enterRoom.subscribe((message) => {
-  let client = createWebRtcConnection({
-    onRemoteJoin: (e) => console.info(e),
-    onRemoteLeave: (e) => console.info(e),
-    roomId: message,
-    onTrack: (track) => {
-      const remoteVideo = document.querySelector('#remote-camera');
-      if (!remoteVideo.srcObject) {
-        console.log("hihihi");
-        remoteVideo.srcObject = track.streams[0];
-      }
+app.ports.enterRoom.subscribe(async (message) => {
+  const localStreamMedia = await navigator.mediaDevices.getUserMedia({
+    audio: true,
+    video: true,
+  });
+
+  const localCamera = document.querySelector('#local-camera');
+
+  localCamera.srcObject = localStreamMedia;
+
+  createWebRtcConnection({
+    localStreamMedia,
+    onRemoteJoin: (id) => {},
+    onRemoteLeave: (id) => {
+      app.ports.remotePeerLeft.send(id);
     },
+    roomId: message,
+    onTrack: (streams, id) => {
+      app.ports.remotePeerJoined.send({ id: id, stream: streams[0] });
+    },
+  }).then(({ channel }) => {
+    app.ports.leaveRoom.subscribe(() => {
+      channel.leave();
+    });
+
+    app.ports.remotePeerReadyToStream.subscribe(({ id, stream }) => {
+      requestAnimationFrame(() => {
+        const remoteVideo = document.querySelector(`[data-uuid="${id}"]`);
+        if (remoteVideo.srcObject) return;
+        remoteVideo.srcObject = stream;
+      });
+    });
   });
 });
