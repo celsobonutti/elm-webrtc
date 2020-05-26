@@ -15,9 +15,11 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
 
   const { channel, sendMessage } = createChannel(config.roomId, userId);
 
-  const peerMap = new Map();
+  const peerMap = new Map<string, RTCPeerConnection>();
 
   let presences = {};
+
+  let presence = new Presence(channel);
 
   const onJoin = async (id: string | undefined) => {
     if (id && id !== userId) {
@@ -37,16 +39,17 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
     }
   };
 
-  const onLeave = async (id: string | undefined) => {
+  presence.onLeave(async (id: string | undefined) => {
+    if (!id) return;
     const disconnectedPeer = peerMap.get(id);
     disconnectedPeer?.close();
     peerMap.delete(id);
 
     config.onRemoteLeave(id);
-  };
+  });
 
   channel.on('presence_diff', (diff) => {
-    presences = Presence.syncDiff(presences, diff, onJoin, onLeave);
+    presences = Presence.syncDiff(presences, diff, onJoin);
   });
 
   channel.on('peer-message', async (payload) => {
@@ -70,6 +73,16 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
       peerMap.set(userId, peerConnection);
     }
   });
+
+  channel.onClose(() => {
+    peerMap.forEach((connection) => {
+      connection.close();
+    });
+  });
+
+  return {
+    channel,
+  };
 };
 
 type PeerConnectionArgs = {

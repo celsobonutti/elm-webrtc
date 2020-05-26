@@ -22,7 +22,7 @@ app.ports.enterRoom.subscribe(async (message) => {
 
   localCamera.srcObject = localStreamMedia;
 
-  let client = createWebRtcConnection({
+  createWebRtcConnection({
     localStreamMedia,
     onRemoteJoin: (id) => {},
     onRemoteLeave: (id) => {
@@ -30,14 +30,19 @@ app.ports.enterRoom.subscribe(async (message) => {
     },
     roomId: message,
     onTrack: (streams, id) => {
-      app.ports.remotePeerJoined.send(id);
-
-      setTimeout(() => {
-        let remoteVideo = document.querySelector(`[data-uuid="${id}"]`);
-        if (!remoteVideo.srcObject) {
-          remoteVideo.srcObject = streams[0];
-        }
-      }, 1000); // TO-DO: Promise with cancellation (Fluture?)
+      app.ports.remotePeerJoined.send({ id: id, stream: streams[0] });
     },
+  }).then(({ channel }) => {
+    app.ports.leaveRoom.subscribe(() => {
+      channel.leave();
+    });
+
+    app.ports.remotePeerReadyToStream.subscribe(({ id, stream }) => {
+      requestAnimationFrame(() => {
+        const remoteVideo = document.querySelector(`[data-uuid="${id}"]`);
+        if (remoteVideo.srcObject) return;
+        remoteVideo.srcObject = stream;
+      });
+    });
   });
 });
