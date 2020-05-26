@@ -112,7 +112,7 @@ const createPeerConnection = async ({
     .getTracks()
     .forEach((track) => peerConnection.addTrack(track, localStreamMedia));
 
-  peerConnection.ontrack = ({ track, streams }) => {
+  peerConnection.ontrack = ({ streams }) => {
     onTrack(streams);
   };
 
