@@ -3,7 +3,7 @@ port module Main exposing (main)
 import Browser
 import Html exposing (..)
 import Html.Attributes as Attrs
-import Html.Events exposing (onInput, onSubmit)
+import Html.Events exposing (onClick, onInput, onSubmit)
 import Html.Keyed exposing (node)
 import Json.Encode as Encode exposing (Value)
 import OrderedSet exposing (OrderedSet)
@@ -54,6 +54,7 @@ init _ =
 type Msg
     = TextChange String
     | Connect
+    | Disconnect
     | PeerJoined { id : String, stream : Value }
     | PeerLeft String
 
@@ -72,6 +73,7 @@ update msg model =
             ( { model
                 | currentRoom = Just model.textInput
                 , peers = OrderedSet.empty
+                , textInput = ""
               }
             , case model.currentRoom of
                 Nothing ->
@@ -82,6 +84,14 @@ update msg model =
                         [ leaveRoom True
                         , enterRoom model.textInput
                         ]
+            )
+
+        Disconnect ->
+            ( { model
+                | currentRoom = Nothing
+                , peers = OrderedSet.empty
+              }
+            , leaveRoom True
             )
 
         PeerJoined { id, stream } ->
@@ -186,9 +196,13 @@ videoRoom model =
                 True
                 ""
                 "user__video"
-            , div [ Attrs.class "chat" ]
-                []
+            , div [ Attrs.class "chat" ] []
             ]
+        , button
+            [ Attrs.class "room__disconnect"
+            , onClick Disconnect
+            ]
+            [ text "Disconnect" ]
         ]
 
 

@@ -1,12 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500&display=swap');
-@import 'include-media.scss', 'search-room.scss', 'video-room.scss';
-
 :root {
   --primary-color: rgb(0, 140, 255);
   --success-color: rgb(108, 180, 0);
   --error-color: rgb(230, 80, 80);
   --disabled-color: rgb(139, 139, 139);
 }
+
+@mixin button {
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  padding: 0.8em 2em;
+}
+
 
 body {
   font-family: 'Work Sans', sans-serif;
@@ -22,3 +30,5 @@ body {
     }
   }
 }
+
+@import 'include-media.scss', 'search-room.scss', 'video-room.scss';
