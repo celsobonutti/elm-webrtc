@@ -1,8 +1,10 @@
 import '../css/app.scss';
+import 'normalize.css';
 
 import 'phoenix_html';
 
 import { createWebRtcConnection } from './webrtc.ts';
+import { getMediaStream } from './media.ts';
 
 let client;
 
@@ -13,17 +15,14 @@ const app = Elm.Main.init({
 });
 
 app.ports.enterRoom.subscribe(async (message) => {
-  const localStreamMedia = await navigator.mediaDevices.getUserMedia({
-    audio: true,
-    video: true,
-  });
+  const localMediaStream = await getMediaStream();
 
   const localCamera = document.querySelector('#local-camera');
 
-  localCamera.srcObject = localStreamMedia;
+  localCamera.srcObject = localMediaStream;
 
   createWebRtcConnection({
-    localStreamMedia,
+    localStreamMedia: localMediaStream,
     onRemoteJoin: (id) => {},
     onRemoteLeave: (id) => {
       app.ports.remotePeerLeft.send(id);
