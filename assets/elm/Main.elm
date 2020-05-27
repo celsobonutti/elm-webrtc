@@ -43,7 +43,10 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { textInput = "", currentRoom = Nothing, peers = OrderedSet.empty }
+    ( { textInput = ""
+      , currentRoom = Nothing
+      , peers = OrderedSet.empty
+      }
     , Cmd.none
     )
 
@@ -59,12 +62,17 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         TextChange newValue ->
-            ( { model | textInput = newValue }
+            ( { model
+                | textInput = newValue
+              }
             , Cmd.none
             )
 
         Connect ->
-            ( { model | currentRoom = Just model.textInput, peers = OrderedSet.empty }
+            ( { model
+                | currentRoom = Just model.textInput
+                , peers = OrderedSet.empty
+              }
             , case model.currentRoom of
                 Nothing ->
                     enterRoom model.textInput
@@ -77,12 +85,16 @@ update msg model =
             )
 
         PeerJoined { id, stream } ->
-            ( { model | peers = OrderedSet.insert id model.peers }
+            ( { model
+                | peers = OrderedSet.insert id model.peers
+              }
             , remotePeerReadyToStream { id = id, stream = stream }
             )
 
         PeerLeft peerId ->
-            ( { model | peers = OrderedSet.remove peerId model.peers }
+            ( { model
+                | peers = OrderedSet.remove peerId model.peers
+              }
             , Cmd.none
             )
 
@@ -161,7 +173,11 @@ videoRoom model =
         [ Attrs.class "room"
         ]
         [ if OrderedSet.isEmpty model.peers then
-            div [ Attrs.class "empty" ] [ p [ Attrs.class "empty__message" ] [ text "There are no users in this room right now." ] ]
+            div [ Attrs.class "empty" ]
+                [ p
+                    [ Attrs.class "empty__message" ]
+                    [ text "There are no users in this room right now." ]
+                ]
 
           else
             Html.Keyed.node "div" [ Attrs.class "peers" ] (peerVideos model.peers)
@@ -207,4 +223,14 @@ peerVideos peers =
     in
     peers
         |> OrderedSet.toList
-        |> List.indexedMap (\index -> \peer -> ( peer, userVideo (generateRemoteUserId index) False peer ("peers__video " ++ class) ))
+        |> List.indexedMap
+            (\index ->
+                \peer ->
+                    ( peer
+                    , userVideo
+                        (generateRemoteUserId index)
+                        False
+                        peer
+                        ("peers__video " ++ class)
+                    )
+            )
