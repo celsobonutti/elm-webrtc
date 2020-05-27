@@ -47,6 +47,7 @@ module.exports = (env, options) => {
               options: {
                 cwd: __dirname,
                 optimize: !devMode,
+                pathToElm: 'node_modules/.bin/elm'
               },
             },
           ],
