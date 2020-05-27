@@ -1,0 +1,104 @@
+.room {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: flex-start;
+}
+
+.empty {
+  flex: 4;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  
+  &__message {
+    color: whitesmoke;
+    padding: 1em;
+  }
+}
+
+.peers {
+  flex: 4;
+  height: 100 / 100 * 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+
+  &__video {
+    flex: none;
+    border: 2px solid black;
+    object-fit: cover;
+    height: auto;
+    
+    &--xl {
+      width: 100%;
+      height: 100%;
+    }
+
+    &--lg {
+      width: 50%;
+      height: 100%;
+    }
+
+    &--md {
+      width: 50%;
+      height: 50%;
+    }
+
+    &--sm {
+      width: 1 / 3 * 100%;
+      height: 1 / 3 * 100%;
+    }
+
+    &--xs {
+      width: 25%;
+      height: 25%;
+    }
+  }
+}
+
+.user {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  @include media('screen', '<tablet') {
+    flex: 0;
+  }
+
+  &__video {
+    object-fit: cover;
+    border: 2px solid black;
+    width: 100%;
+
+    @include media('screen', '<tablet') {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      width: 30%;
+    }
+  }
+}
+
+.chat {
+  flex: 1;
+  background-color: #2d2d2d;
+  border-color: #5d5d5d;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column-reverse;
+  overflow: hidden auto;
+
+  &__message {
+    background-color: #8d8d8d;
+    color: white;
+    margin: 0.3rem 0.5rem;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 4px;
+  }
+}

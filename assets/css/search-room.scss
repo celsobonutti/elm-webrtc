@@ -1,0 +1,72 @@
+@import './include-media.scss';
+
+.search {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+
+  form {
+    @include media('screen', '<tablet') {
+      width: 80%;
+    }
+  }
+
+  &__label {
+    display: block;
+    color: white;
+    margin: 1em 0;
+  }
+
+  &__form {
+    display: flex;
+
+    @include media('screen', '<tablet') {
+      flex-direction: column;
+    }
+  }
+
+  &__input {
+    border: 2px solid rgb(206, 206, 206);
+    border-radius: 4px;
+    color: black;
+    margin-right: 0.5em;
+    font-size: 1rem;
+    padding: 1em;
+
+    &:focus {
+      border: 2px solid var(--primary-color);
+      border-spacing: 2px;
+    }
+
+    @include media('screen', '<tablet') {
+      margin: 1em 0;
+    }
+  }
+
+  &__button {
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+    padding: 0.8em 2em;
+    transition: 0.25s;
+
+    &:not([disabled]) {
+      border: 1px solid var(--primary-color);
+
+      &:hover,
+      &:focus {
+        box-shadow: inset -10em 0 0 0 var(--primary-color),
+          inset 10em 0 0 0 var(--primary-color);
+      }
+    }
+
+    &:disabled {
+      background-color: grey;
+    }
+  }
+}

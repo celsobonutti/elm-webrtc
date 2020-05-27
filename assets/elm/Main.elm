@@ -97,66 +97,55 @@ subscriptions _ =
 
 view : Model -> Html Msg
 view model =
-    div
-        [ Attrs.class "room" ]
-        [ Html.form [ Attrs.class "search__form", onSubmit Connect ]
+    case model.currentRoom of
+        Nothing ->
+            roomForm model
+
+        Just _ ->
+            videoRoom model
+
+
+roomForm : Model -> Html Msg
+roomForm model =
+    div [ Attrs.class "search" ]
+        [ Html.form [ onSubmit Connect ]
             [ label
                 [ Attrs.class "search__label", Attrs.for "room" ]
-                [ text
-                    (case model.currentRoom of
-                        Nothing ->
-                            "Select a room"
-
-                        Just roomId ->
-                            "Your room is: " ++ roomId
-                    )
+                [ text "Enter the name of your room:" ]
+            , div [ Attrs.class "search__form" ]
+                [ input
+                    [ Attrs.value model.textInput
+                    , onInput TextChange
+                    , Attrs.class "search__input"
+                    , Attrs.name "room"
+                    ]
+                    []
+                , formButton model
                 ]
-            , input
-                [ Attrs.value model.textInput
-                , onInput TextChange
-                , Attrs.class "search__input"
-                , Attrs.name "room"
-                ]
-                []
-            , formButton model
             ]
-        , userVideo "local-camera" True ""
-        , Html.Keyed.node "div" [ Attrs.class "videos" ] (peerVideos model.peers)
         ]
 
 
 formButton : Model -> Html Msg
 formButton model =
-    case model.currentRoom of
-        Nothing ->
-            button
-                [ Attrs.class "search__button"
-                , Attrs.disabled (String.length model.textInput == 0)
-                ]
-                [ text "Enter" ]
-
-        Just currentRoom ->
-            button
-                [ Attrs.class "search__button search__button--success"
-                , Attrs.disabled
-                    (currentRoom
-                        == model.textInput
-                        || String.length model.textInput
-                        == 0
-                    )
-                ]
-                [ text "Change" ]
+    button
+        [ Attrs.class "search__button"
+        , Attrs.disabled (String.length model.textInput == 0)
+        ]
+        [ text "Enter" ]
 
 
-userVideo : String -> Bool -> String -> Html Msg
-userVideo userId muted uuid =
+userVideo : String -> Bool -> String -> String -> Html Msg
+userVideo userId muted uuid class =
     video
         [ Attrs.id userId
         , Attrs.autoplay True
+        , Attrs.loop True
+        , Attrs.attribute "playsinline" "playsinline"
         , Attrs.property "muted" (Encode.bool muted)
         , Attrs.attribute "data-UUID" uuid
-        , Attrs.height 240
-        , Attrs.width 420
+        , Attrs.autoplay True
+        , Attrs.class class
         ]
         [ source
             [ Attrs.src ""
@@ -166,13 +155,56 @@ userVideo userId muted uuid =
         ]
 
 
+videoRoom : Model -> Html Msg
+videoRoom model =
+    div
+        [ Attrs.class "room"
+        ]
+        [ if OrderedSet.isEmpty model.peers then
+            div [ Attrs.class "empty" ] [ p [ Attrs.class "empty__message" ] [ text "There are no users in this room right now." ] ]
+
+          else
+            Html.Keyed.node "div" [ Attrs.class "peers" ] (peerVideos model.peers)
+        , div [ Attrs.class "user" ]
+            [ userVideo "local-camera"
+                True
+                ""
+                "user__video"
+            , div [ Attrs.class "chat" ]
+                []
+            ]
+        ]
+
+
 generateRemoteUserId : Int -> String
 generateRemoteUserId index =
     "remote-peer" ++ String.fromInt index
 
 
+peerClass : Int -> String
+peerClass numberOfPeers =
+    if numberOfPeers == 1 then
+        "peers__video--xl"
+
+    else if numberOfPeers == 2 then
+        "peers__video--lg"
+
+    else if numberOfPeers <= 4 then
+        "peers__video--md"
+
+    else if numberOfPeers <= 9 then
+        "peers__video--sm"
+
+    else
+        "peers__video--xs"
+
+
 peerVideos : OrderedSet String -> List ( String, Html Msg )
 peerVideos peers =
+    let
+        class =
+            OrderedSet.size peers |> peerClass
+    in
     peers
         |> OrderedSet.toList
-        |> List.indexedMap (\index -> \peer -> ( peer, userVideo (generateRemoteUserId index) False peer ))
+        |> List.indexedMap (\index -> \peer -> ( peer, userVideo (generateRemoteUserId index) False peer ("peers__video " ++ class) ))
