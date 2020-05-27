@@ -3,7 +3,7 @@ import { Channel, Presence } from 'phoenix';
 import { v4 as uuid } from 'uuid';
 
 type WebRTCConfig = {
-  localStreamMedia: MediaStream;
+  localMediaStream: MediaStream;
   onRemoteJoin: Function;
   onRemoteLeave: Function;
   roomId: string;
@@ -26,7 +26,7 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
       const { peerConnection } = await createPeerConnection({
         channel,
         onTrack: (stream) => config.onTrack(stream, id),
-        localStreamMedia: config.localStreamMedia,
+        localMediaStream: config.localMediaStream,
         senderId: userId,
         targetId: id,
         sendMessage,
@@ -61,7 +61,7 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
       const { peerConnection, onVideoOffer } = await createPeerConnection({
         channel,
         onTrack: (stream) => config.onTrack(stream, body.senderId),
-        localStreamMedia: config.localStreamMedia,
+        localMediaStream: config.localMediaStream,
         senderId: userId,
         targetId: body.senderId,
         sendMessage,
@@ -88,7 +88,7 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
 type PeerConnectionArgs = {
   channel: Channel;
   sendMessage: WebRTCMessageSender;
-  localStreamMedia: MediaStream;
+  localMediaStream: MediaStream;
   senderId: string;
   targetId: string;
   onTrack: (streams: readonly MediaStream[]) => void;
@@ -98,7 +98,7 @@ type PeerConnectionArgs = {
 const createPeerConnection = async ({
   channel,
   sendMessage,
-  localStreamMedia,
+  localMediaStream,
   senderId,
   targetId,
   onTrack,
@@ -108,9 +108,9 @@ const createPeerConnection = async ({
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
   });
 
-  localStreamMedia
+  localMediaStream
     .getTracks()
-    .forEach((track) => peerConnection.addTrack(track, localStreamMedia));
+    .forEach((track) => peerConnection.addTrack(track, localMediaStream));
 
   peerConnection.ontrack = ({ streams }) => {
     onTrack(streams);
