@@ -1,4 +1,4 @@
-port module Page.Video exposing (Model, Msg, init, subscriptions, update, view, enterRoom, leaveRoom)
+port module Page.Video exposing (Model, Msg, init, subscriptions, update, view)
 
 import Browser.Navigation as Nav
 import Html exposing (..)
@@ -13,13 +13,10 @@ import Route
 port enterRoom : String -> Cmd msg
 
 
-port leaveRoom : Bool -> Cmd msg
+port remotePeerReadyToStream : { id : String, stream : Value } -> Cmd msg
 
 
 port remotePeerJoined : ({ id : String, stream : Value } -> msg) -> Sub msg
-
-
-port remotePeerReadyToStream : { id : String, stream : Value } -> Cmd msg
 
 
 port remotePeerLeft : (String -> msg) -> Sub msg

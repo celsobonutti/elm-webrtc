@@ -92,6 +92,15 @@ update msg model =
             , Cmd.map SearchPageMsg updatedCmd
             )
 
+        ( VideoPageMsg subMsg, VideoPage pageModel ) ->
+            let 
+                ( updatedPageModel, updatedCmd ) =
+                    VideoPage.update subMsg pageModel
+            in
+            ( {model | page = VideoPage updatedPageModel }
+            , Cmd.map VideoPageMsg updatedCmd
+            )
+
         ( LinkClicked urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->

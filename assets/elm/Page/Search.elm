@@ -3,7 +3,7 @@ module Page.Search exposing (Model, Msg, init, update, view)
 import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes as Attrs
-import Html.Events exposing (onClick, onInput, onSubmit)
+import Html.Events exposing (onInput, onSubmit)
 import Route
 
 
