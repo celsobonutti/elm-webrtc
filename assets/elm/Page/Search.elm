@@ -1,12 +1,15 @@
 module Page.Search exposing (Model, Msg, init, update, view)
 
+import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes as Attrs
 import Html.Events exposing (onClick, onInput, onSubmit)
+import Route
 
 
 type alias Model =
     { textInput : String
+    , navKey : Nav.Key
     }
 
 
@@ -15,9 +18,9 @@ type Msg
     | EnterRoom
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( { textInput = "" }, Cmd.none )
+init : Nav.Key -> ( Model, Cmd Msg )
+init navKey =
+    ( { textInput = "", navKey = navKey }, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -30,7 +33,7 @@ update msg model =
 
         EnterRoom ->
             ( { model | textInput = "" }
-            , Cmd.none
+            , Route.pushUrl (Route.VideoRoom model.textInput) model.navKey
             )
 
 

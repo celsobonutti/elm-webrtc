@@ -4,6 +4,7 @@ import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Html exposing (..)
 import Page.Search as SearchPage
+import Page.Video as VideoPage
 import Route exposing (Route)
 import Url exposing (Url)
 
@@ -14,7 +15,7 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         , onUrlRequest = LinkClicked
         , onUrlChange = UrlChanged
         }
@@ -30,10 +31,12 @@ type alias Model =
 type Page
     = NotFoundPage
     | SearchPage SearchPage.Model
+    | VideoPage VideoPage.Model
 
 
 type Msg
     = SearchPageMsg SearchPage.Msg
+    | VideoPageMsg VideoPage.Msg
     | LinkClicked UrlRequest
     | UrlChanged Url
 
@@ -58,12 +61,19 @@ initCurrentPage ( model, existingCmds ) =
                 Route.NotFound ->
                     ( NotFoundPage, Cmd.none )
 
-                Route.SearchRoom ->
+                Route.Search ->
                     let
                         ( pageModel, pageCmds ) =
-                            SearchPage.init
+                            SearchPage.init model.navKey
                     in
                     ( SearchPage pageModel, Cmd.map SearchPageMsg pageCmds )
+
+                Route.VideoRoom roomId ->
+                    let
+                        ( pageModel, pageCmds ) =
+                            VideoPage.init roomId model.navKey
+                    in
+                    ( VideoPage pageModel, Cmd.map VideoPageMsg pageCmds )
     in
     ( { model | page = currentPage }
     , Cmd.batch [ existingCmds, mappedPageCmds ]
@@ -106,6 +116,16 @@ update msg model =
             ( model, Cmd.none )
 
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model.page of
+        VideoPage _ ->
+            Sub.map VideoPageMsg VideoPage.subscriptions
+
+        _ ->
+            Sub.none
+
+
 view : Model -> Document Msg
 view model =
     { title = "ICBSMS"
@@ -122,3 +142,7 @@ currentView model =
         SearchPage searchModel ->
             SearchPage.view searchModel
                 |> Html.map SearchPageMsg
+
+        VideoPage videoModel ->
+            VideoPage.view videoModel
+                |> Html.map VideoPageMsg

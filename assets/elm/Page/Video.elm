@@ -1,22 +1,13 @@
-port module Page.Video exposing (main)
+port module Page.Video exposing (Model, Msg, init, subscriptions, update, view, enterRoom, leaveRoom)
 
-import Browser
+import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes as Attrs
-import Html.Events exposing (onClick, onInput, onSubmit)
+import Html.Events exposing (onClick)
 import Html.Keyed exposing (node)
 import Json.Encode as Encode exposing (Value)
 import OrderedSet exposing (OrderedSet)
-
-
-main : Program () Model Msg
-main =
-    Browser.element
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        }
+import Route
 
 
 port enterRoom : String -> Cmd msg
@@ -35,25 +26,22 @@ port remotePeerLeft : (String -> msg) -> Sub msg
 
 
 type alias Model =
-    { textInput : String
-    , currentRoom : Maybe String
-    , peers : OrderedSet String
+    { peers : OrderedSet String
+    , navKey : Nav.Key
     }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( { textInput = ""
-      , currentRoom = Nothing
-      , peers = OrderedSet.empty
+init : String -> Nav.Key -> ( Model, Cmd Msg )
+init room navKey =
+    ( { peers = OrderedSet.empty
+      , navKey = navKey
       }
-    , Cmd.none
+    , enterRoom room
     )
 
 
 type Msg
-    = Connect
-    | Disconnect
+    = Disconnect
     | PeerJoined { id : String, stream : Value }
     | PeerLeft String
 
@@ -61,29 +49,11 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Connect ->
-            ( { model
-                | currentRoom = Just model.textInput
-                , peers = OrderedSet.empty
-                , textInput = ""
-              }
-            , case model.currentRoom of
-                Nothing ->
-                    enterRoom model.textInput
-
-                Just _ ->
-                    Cmd.batch
-                        [ leaveRoom True
-                        , enterRoom model.textInput
-                        ]
-            )
-
         Disconnect ->
             ( { model
-                | currentRoom = Nothing
-                , peers = OrderedSet.empty
+                | peers = OrderedSet.empty
               }
-            , leaveRoom True
+            , Route.pushUrl Route.Search model.navKey
             )
 
         PeerJoined { id, stream } ->
@@ -101,8 +71,8 @@ update msg model =
             )
 
 
-subscriptions : Model -> Sub Msg
-subscriptions _ =
+subscriptions : Sub Msg
+subscriptions =
     Sub.batch
         [ remotePeerJoined PeerJoined
         , remotePeerLeft PeerLeft
