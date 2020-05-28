@@ -32,9 +32,6 @@ app.ports.enterRoom.subscribe(async (message) => {
       app.ports.remotePeerJoined.send({ id: id, stream: streams[0] });
     },
   }).then(({ channel }) => {
-    app.ports.leaveRoom.subscribe(() => {
-      channel.leave();
-    });
 
     app.ports.remotePeerReadyToStream.subscribe(({ id, stream }) => {
       requestAnimationFrame(() => {

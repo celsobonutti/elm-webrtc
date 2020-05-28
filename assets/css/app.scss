@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500&display=swap');
 :root {
   --primary-color: rgb(0, 140, 255);
   --success-color: rgb(108, 180, 0);
@@ -13,6 +12,7 @@
   font-weight: bold;
   font-size: 1rem;
   padding: 0.8em 2em;
+  box-sizing: border-box;
 }
 
 
@@ -32,3 +32,4 @@ body {
 }
 
 @import 'include-media.scss', 'search-room.scss', 'video-room.scss';
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500&display=swap');
