@@ -13,6 +13,9 @@ import Route
 port enterRoom : String -> Cmd msg
 
 
+port leaveRoom : Bool -> Cmd msg
+
+
 port remotePeerReadyToStream : { id : String, stream : Value } -> Cmd msg
 
 
@@ -50,7 +53,7 @@ update msg model =
             ( { model
                 | peers = OrderedSet.empty
               }
-            , Route.pushUrl Route.Search model.navKey
+            , Cmd.batch [ leaveRoom True, Route.pushUrl Route.Search model.navKey ]
             )
 
         PeerJoined { id, stream } ->
