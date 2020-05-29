@@ -35,36 +35,16 @@
   align-items: center;
   flex-wrap: wrap;
 
+  @include media('screen', '<tablet') {
+    writing-mode: vertical-lr;
+    width: 100vw;
+  }
+
   &__video {
     flex: none;
     border: 2px solid black;
     object-fit: cover;
     height: auto;
-
-    &--xl {
-      width: 100%;
-      height: 100%;
-    }
-
-    &--lg {
-      width: 50%;
-      height: 100%;
-    }
-
-    &--md {
-      width: 50%;
-      height: 50%;
-    }
-
-    &--sm {
-      width: 1 / 3 * 100%;
-      height: 1 / 3 * 100%;
-    }
-
-    &--xs {
-      width: 25%;
-      height: 25%;
-    }
   }
 }
 

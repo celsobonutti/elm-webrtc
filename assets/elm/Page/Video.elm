@@ -98,6 +98,7 @@ view model =
                 True
                 ""
                 "user__video"
+                []
             , div [ Attrs.class "chat" ] []
             ]
         , button
@@ -108,18 +109,22 @@ view model =
         ]
 
 
-userVideo : String -> Bool -> String -> String -> Html Msg
-userVideo userId muted uuid class =
+userVideo : String -> Bool -> String -> String -> List (Attribute Msg) -> Html Msg
+userVideo userId muted uuid class styles =
     video
-        [ Attrs.id userId
-        , Attrs.autoplay True
-        , Attrs.loop True
-        , Attrs.attribute "playsinline" "playsinline"
-        , Attrs.property "muted" (Encode.bool muted)
-        , Attrs.attribute "data-UUID" uuid
-        , Attrs.autoplay True
-        , Attrs.class class
-        ]
+        ([ Attrs.id userId
+         , Attrs.autoplay True
+         , Attrs.loop True
+         , Attrs.attribute "playsinline" "playsinline"
+         , Attrs.property "muted" (Encode.bool muted)
+         , Attrs.attribute "data-UUID" uuid
+         , Attrs.autoplay True
+         , Attrs.class class
+         , Attrs.style "inline-size" "1/2%"
+         , Attrs.style "block-size" "1/2%"
+         ]
+            ++ styles
+        )
         [ source
             [ Attrs.src ""
             , Attrs.type_ "video/mp4"
@@ -128,34 +133,11 @@ userVideo userId muted uuid class =
         ]
 
 
-generateRemoteUserId : Int -> String
-generateRemoteUserId index =
-    "remote-peer-" ++ String.fromInt index
-
-
-peerClass : Int -> String
-peerClass numberOfPeers =
-    if numberOfPeers == 1 then
-        "peers__video--xl"
-
-    else if numberOfPeers == 2 then
-        "peers__video--lg"
-
-    else if numberOfPeers <= 4 then
-        "peers__video--md"
-
-    else if numberOfPeers <= 9 then
-        "peers__video--sm"
-
-    else
-        "peers__video--xs"
-
-
 peerVideos : OrderedSet String -> List ( String, Html Msg )
 peerVideos peers =
     let
-        class =
-            OrderedSet.size peers |> peerClass
+        styles =
+            OrderedSet.size peers |> videoDimensions
     in
     peers
         |> OrderedSet.toList
@@ -167,6 +149,41 @@ peerVideos peers =
                         (generateRemoteUserId index)
                         False
                         peer
-                        ("peers__video " ++ class)
+                        "peers__video"
+                        styles
                     )
             )
+
+
+closestPower : Int -> Int -> Int
+closestPower number index =
+    if number <= index ^ 2 then
+        index
+
+    else
+        closestPower number (index + 1)
+
+
+videoDimensions : Int -> List (Attribute Msg)
+videoDimensions numberOfPeers =
+    let
+        mainAxisCount =
+            closestPower numberOfPeers 1
+
+        crossAxisCount =
+            (toFloat numberOfPeers / toFloat mainAxisCount) |> ceiling
+
+        mainAxisPortion =
+            100 / toFloat mainAxisCount
+
+        crossAxisPortion =
+            100 / toFloat crossAxisCount
+    in
+    [ Attrs.style "inline-size" (String.fromFloat mainAxisPortion ++ "%")
+    , Attrs.style "block-size" (String.fromFloat crossAxisPortion ++ "%")
+    ]
+
+
+generateRemoteUserId : Int -> String
+generateRemoteUserId index =
+    "remote-peer-" ++ String.fromInt index
