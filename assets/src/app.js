@@ -3,8 +3,8 @@ import 'normalize.css';
 
 import 'phoenix_html';
 
-import { createWebRtcConnection } from './webrtc.ts';
-import { getMediaStream } from './media.ts';
+import { createConnection } from './webrtc';
+import { getMediaStream } from './media';
 
 let client;
 
@@ -21,7 +21,7 @@ app.ports.enterRoom.subscribe(async (message) => {
 
   localCamera.srcObject = localMediaStream;
 
-  createWebRtcConnection({
+  createConnection({
     localMediaStream,
     onRemoteJoin: (id) => {},
     onRemoteLeave: (id) => {
@@ -31,18 +31,25 @@ app.ports.enterRoom.subscribe(async (message) => {
     onTrack: (streams, id) => {
       app.ports.remotePeerJoined.send({ id: id, stream: streams[0] });
     },
-  }).then(({ channel }) => {
-    app.ports.leaveRoom.subscribe(() => {
-      channel.leave();
-      localMediaStream.getTracks().forEach((track) => track.stop());
-    });
-
+    onMessageReceived: (message) => {
+      app.ports.messageReceived.send(message);
+    },
+  }).then(({ channel, sendTextMessage }) => {
     app.ports.remotePeerReadyToStream.subscribe(({ id, stream }) => {
       requestAnimationFrame(() => {
         const remoteVideo = document.querySelector(`[data-uuid="${id}"]`);
         if (remoteVideo.srcObject) return;
         remoteVideo.srcObject = stream;
       });
+    });
+
+    app.ports.sendMessage.subscribe((content) => {
+      sendTextMessage(content);
+    });
+
+    app.ports.leaveRoom.subscribe(() => {
+      channel.leave();
+      localMediaStream.getTracks().forEach((track) => track.stop());
     });
   });
 });

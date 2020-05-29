@@ -22,4 +22,9 @@ defmodule ElmWebRtcWeb.VideoChannel do
     broadcast_from!(socket, "peer-message", %{body: body})
     {:noreply, socket}
   end
+
+  def handle_in("text-message", %{"body" => body}, socket) do
+    broadcast_from!(socket, "text-message", %{body: body, sender: socket.assigns.user_id})
+    {:noreply, socket}
+  end
 end

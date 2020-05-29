@@ -1,4 +1,9 @@
-import { createChannel, WebRTCMessageSender, WebRTCMessage } from './socket';
+import {
+  createChannel,
+  WebRTCMessageSender,
+  WebRTCMessage,
+  TextMessage,
+} from './socket';
 import { Channel, Presence } from 'phoenix';
 import { v4 as uuid } from 'uuid';
 
@@ -6,14 +11,18 @@ type WebRTCConfig = {
   localMediaStream: MediaStream;
   onRemoteJoin: Function;
   onRemoteLeave: Function;
+  onMessageReceived: Function;
   roomId: string;
   onTrack: (stream: readonly MediaStream[], peerId: string) => void;
 };
 
-export const createWebRtcConnection = async (config: WebRTCConfig) => {
+export const createConnection = async (config: WebRTCConfig) => {
   const userId = uuid();
 
-  const { channel, sendMessage } = createChannel(config.roomId, userId);
+  const { channel, sendWebRtcMessage, sendTextMessage } = createChannel(
+    config.roomId,
+    userId
+  );
 
   const peerMap = new Map<string, RTCPeerConnection>();
 
@@ -29,7 +38,7 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
         localMediaStream: config.localMediaStream,
         senderId: userId,
         targetId: id,
-        sendMessage,
+        sendWebRtcMessage,
         starting: true,
       });
 
@@ -64,7 +73,7 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
         localMediaStream: config.localMediaStream,
         senderId: userId,
         targetId: body.senderId,
-        sendMessage,
+        sendWebRtcMessage,
         starting: false,
       });
 
@@ -72,6 +81,14 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
 
       peerMap.set(userId, peerConnection);
     }
+  });
+
+  channel.on('text-message', async (payload) => {
+    const message = {
+      sender: payload.sender,
+      content: JSON.parse(payload.body).content,
+    };
+    config.onMessageReceived(message);
   });
 
   channel.onClose(() => {
@@ -82,12 +99,13 @@ export const createWebRtcConnection = async (config: WebRTCConfig) => {
 
   return {
     channel,
+    sendTextMessage,
   };
 };
 
 type PeerConnectionArgs = {
   channel: Channel;
-  sendMessage: WebRTCMessageSender;
+  sendWebRtcMessage: WebRTCMessageSender;
   localMediaStream: MediaStream;
   senderId: string;
   targetId: string;
@@ -97,7 +115,7 @@ type PeerConnectionArgs = {
 
 const createPeerConnection = async ({
   channel,
-  sendMessage,
+  sendWebRtcMessage,
   localMediaStream,
   senderId,
   targetId,
@@ -120,7 +138,12 @@ const createPeerConnection = async ({
     try {
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
-      sendMessage({ type: 'video-offer', content: offer, senderId, targetId });
+      sendWebRtcMessage({
+        type: 'video-offer',
+        content: offer,
+        senderId,
+        targetId,
+      });
     } catch (err) {
       console.error('[NEGOTIATION NEEDED] ' + err);
     }
@@ -128,7 +151,7 @@ const createPeerConnection = async ({
 
   peerConnection.onicecandidate = ({ candidate }) => {
     if (candidate) {
-      sendMessage({
+      sendWebRtcMessage({
         type: 'ice-candidate',
         content: candidate,
         senderId,
@@ -162,7 +185,12 @@ const createPeerConnection = async ({
     await peerConnection.setRemoteDescription(offer);
     const answer = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answer);
-    sendMessage({ type: 'video-answer', content: answer, senderId, targetId });
+    sendWebRtcMessage({
+      type: 'video-answer',
+      content: answer,
+      senderId,
+      targetId,
+    });
   };
 
   return {

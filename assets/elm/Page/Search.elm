@@ -14,7 +14,7 @@ type alias Model =
 
 
 type Msg
-    = TextChange String
+    = ChangeText String
     | EnterRoom
 
 
@@ -26,7 +26,7 @@ init navKey =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        TextChange newValue ->
+        ChangeText newValue ->
             ( { model | textInput = newValue }
             , Cmd.none
             )
@@ -47,7 +47,7 @@ view model =
             , div [ Attrs.class "search__form" ]
                 [ input
                     [ Attrs.value model.textInput
-                    , onInput TextChange
+                    , onInput ChangeText
                     , Attrs.class "search__input"
                     , Attrs.name "room"
                     ]

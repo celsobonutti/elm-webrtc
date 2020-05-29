@@ -21,6 +21,13 @@ export type WebRTCMessage = (
   | RTCAnswerMessage
 ) & { senderId: string; targetId: string };
 
+export type TextMessage = {
+  body: {
+    content: string;
+  };
+  sender: string;
+};
+
 export type WebRTCMessageSender = (message: WebRTCMessage) => void;
 
 export const createChannel = (room: string = 'string', userId: string) => {
@@ -31,7 +38,7 @@ export const createChannel = (room: string = 'string', userId: string) => {
   const channel = socket.channel(`videoroom:${room}`, {});
   channel.join();
 
-  const sendMessage: WebRTCMessageSender = ({
+  const sendWebRtcMessage: WebRTCMessageSender = ({
     type,
     content,
     senderId,
@@ -42,13 +49,22 @@ export const createChannel = (room: string = 'string', userId: string) => {
         type,
         content,
         senderId,
-        targetId
+        targetId,
+      }),
+    });
+  };
+
+  const sendTextMessage = (content: string) => {
+    channel.push('text-message', {
+      body: JSON.stringify({
+        content,
       }),
     });
   };
 
   return {
     channel,
-    sendMessage,
+    sendWebRtcMessage,
+    sendTextMessage,
   };
 };

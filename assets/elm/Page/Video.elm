@@ -3,7 +3,7 @@ port module Page.Video exposing (Model, Msg, init, subscriptions, update, view)
 import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes as Attrs
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput, onSubmit)
 import Html.Keyed exposing (node)
 import Json.Encode as Encode exposing (Value)
 import OrderedSet exposing (OrderedSet)
@@ -25,8 +25,22 @@ port remotePeerJoined : ({ id : String, stream : Value } -> msg) -> Sub msg
 port remotePeerLeft : (String -> msg) -> Sub msg
 
 
+port sendMessage : String -> Cmd msg
+
+
+port messageReceived : (Message -> msg) -> Sub msg
+
+
+type alias Message =
+    { sender : Maybe String
+    , content : String
+    }
+
+
 type alias Model =
     { peers : OrderedSet String
+    , messages : List Message
+    , textInput : String
     , navKey : Nav.Key
     }
 
@@ -34,6 +48,8 @@ type alias Model =
 init : String -> Nav.Key -> ( Model, Cmd Msg )
 init room navKey =
     ( { peers = OrderedSet.empty
+      , messages = []
+      , textInput = ""
       , navKey = navKey
       }
     , enterRoom room
@@ -44,6 +60,9 @@ type Msg
     = Disconnect
     | PeerJoined { id : String, stream : Value }
     | PeerLeft String
+    | ChangeText String
+    | SendMessage
+    | MessageReceived Message
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -70,12 +89,37 @@ update msg model =
             , Cmd.none
             )
 
+        ChangeText newValue ->
+            ( { model | textInput = newValue }
+            , Cmd.none
+            )
+
+        SendMessage ->
+            ( { model
+                | messages =
+                    { sender = Nothing
+                    , content = model.textInput
+                    }
+                        :: model.messages
+                , textInput = ""
+              }
+            , sendMessage model.textInput
+            )
+
+        MessageReceived message ->
+            ( { model
+                | messages = message :: model.messages
+              }
+            , Cmd.none
+            )
+
 
 subscriptions : Sub Msg
 subscriptions =
     Sub.batch
         [ remotePeerJoined PeerJoined
         , remotePeerLeft PeerLeft
+        , messageReceived MessageReceived
         ]
 
 
@@ -99,7 +143,20 @@ view model =
                 ""
                 "user__video"
                 []
-            , div [ Attrs.class "chat" ] []
+            , div [ Attrs.class "chat" ] (messageList model.messages)
+            , form [ Attrs.class "chat__form", onSubmit SendMessage ]
+                [ input
+                    [ Attrs.value model.textInput
+                    , onInput ChangeText
+                    , Attrs.class "chat__input"
+                    ]
+                    []
+                , button
+                    [ Attrs.class "chat__button"
+                    , Attrs.disabled (String.length model.textInput == 0)
+                    ]
+                    [ text "Send" ]
+                ]
             ]
         , button
             [ Attrs.class "room__disconnect"
@@ -107,6 +164,26 @@ view model =
             ]
             [ text "Disconnect" ]
         ]
+
+
+messageList : List Message -> List (Html Msg)
+messageList messages =
+    messages
+        |> List.map
+            (\message ->
+                case message.sender of
+                    Nothing ->
+                        div [ Attrs.class "message message--user" ]
+                            [ p [ Attrs.class "message__sender message__sender--user" ] [ text "You" ]
+                            , p [ Attrs.class "message__text" ] [ text message.content ]
+                            ]
+
+                    Just senderId ->
+                        div [ Attrs.class "message" ]
+                            [ p [ Attrs.class "message__sender" ] [ text senderId ]
+                            , p [ Attrs.class "message__text" ] [ text message.content ]
+                            ]
+            )
 
 
 userVideo : String -> Bool -> String -> String -> List (Attribute Msg) -> Html Msg
