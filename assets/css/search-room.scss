@@ -2,14 +2,14 @@
 
 .search {
   display: flex;
-  width: 100%;
-  min-height: 100vh;
+  inline-size: 100%;
+  min-block-size: 100vh;
   align-items: center;
   justify-content: center;
 
   form {
     @include media('screen', '<tablet') {
-      width: 80%;
+      inline-size: 80%;
     }
   }
 
@@ -31,7 +31,7 @@
     border: 2px solid rgb(206, 206, 206);
     border-radius: 4px;
     color: black;
-    margin-right: 0.5em;
+    margin-inline-end: 0.5em;
     font-size: 1rem;
     padding: 1em;
 
