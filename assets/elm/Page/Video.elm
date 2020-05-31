@@ -5,6 +5,7 @@ import Html exposing (..)
 import Html.Attributes as Attrs
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Html.Keyed exposing (node)
+import Html.Lazy exposing (lazy)
 import Json.Encode as Encode exposing (Value)
 import OrderedSet exposing (OrderedSet)
 import Route
@@ -143,20 +144,8 @@ view model =
                 ""
                 "user__video"
                 []
-            , div [ Attrs.class "chat" ] (messageList model.messages)
-            , form [ Attrs.class "chat__form", onSubmit SendMessage ]
-                [ input
-                    [ Attrs.value model.textInput
-                    , onInput ChangeText
-                    , Attrs.class "chat__input"
-                    ]
-                    []
-                , button
-                    [ Attrs.class "chat__button"
-                    , Attrs.disabled (String.length model.textInput == 0)
-                    ]
-                    [ text "Send" ]
-                ]
+            , lazy viewMessages model.messages
+            , lazy viewChatInput model
             ]
         , button
             [ Attrs.class "room__disconnect"
@@ -166,24 +155,45 @@ view model =
         ]
 
 
-messageList : List Message -> List (Html Msg)
-messageList messages =
-    messages
-        |> List.map
-            (\message ->
-                case message.sender of
-                    Nothing ->
-                        div [ Attrs.class "message message--user" ]
-                            [ p [ Attrs.class "message__sender message__sender--user" ] [ text "You" ]
-                            , p [ Attrs.class "message__text" ] [ text message.content ]
-                            ]
+viewMessages : List Message -> Html Msg
+viewMessages messages =
+    let
+        messageList =
+            messages
+                |> List.map
+                    (\message ->
+                        case message.sender of
+                            Nothing ->
+                                div [ Attrs.class "message message--user" ]
+                                    [ p [ Attrs.class "message__sender message__sender--user" ] [ text "You" ]
+                                    , p [ Attrs.class "message__text" ] [ text message.content ]
+                                    ]
 
-                    Just senderId ->
-                        div [ Attrs.class "message" ]
-                            [ p [ Attrs.class "message__sender" ] [ text senderId ]
-                            , p [ Attrs.class "message__text" ] [ text message.content ]
-                            ]
-            )
+                            Just senderId ->
+                                div [ Attrs.class "message" ]
+                                    [ p [ Attrs.class "message__sender" ] [ text senderId ]
+                                    , p [ Attrs.class "message__text" ] [ text message.content ]
+                                    ]
+                    )
+    in
+    div [ Attrs.class "chat" ] messageList
+
+
+viewChatInput : Model -> Html Msg
+viewChatInput model =
+    form [ Attrs.class "chat__form", onSubmit SendMessage ]
+        [ input
+            [ Attrs.value model.textInput
+            , onInput ChangeText
+            , Attrs.class "chat__input"
+            ]
+            []
+        , button
+            [ Attrs.class "chat__button"
+            , Attrs.disabled (String.length model.textInput == 0)
+            ]
+            [ text "Send" ]
+        ]
 
 
 userVideo : String -> Bool -> String -> String -> List (Attribute Msg) -> Html Msg

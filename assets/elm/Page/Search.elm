@@ -4,6 +4,7 @@ import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes as Attrs
 import Html.Events exposing (onInput, onSubmit)
+import Html.Lazy exposing (lazy)
 import Route
 
 
@@ -39,25 +40,28 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div [ Attrs.class "search" ]
-        [ Html.form [ onSubmit EnterRoom ]
-            [ label
-                [ Attrs.class "search__label", Attrs.for "room" ]
-                [ text "Enter the name of your room:" ]
-            , div [ Attrs.class "search__form" ]
-                [ input
-                    [ Attrs.value model.textInput
-                    , onInput ChangeText
-                    , Attrs.class "search__input"
-                    , Attrs.name "room"
-                    , Attrs.autofocus True
-                    ]
-                    []
-                , button
-                    [ Attrs.class "search__button"
-                    , Attrs.disabled (String.length model.textInput == 0)
-                    ]
-                    [ text "Enter" ]
+    div [ Attrs.class "search" ] [ lazy viewForm model ]
+
+
+viewForm : Model -> Html Msg
+viewForm model =
+    form [ onSubmit EnterRoom ]
+        [ label
+            [ Attrs.class "search__label", Attrs.for "room" ]
+            [ text "Enter the name of your room:" ]
+        , div [ Attrs.class "search__form" ]
+            [ input
+                [ Attrs.value model.textInput
+                , onInput ChangeText
+                , Attrs.class "search__input"
+                , Attrs.name "room"
+                , Attrs.autofocus True
                 ]
+                []
+            , button
+                [ Attrs.class "search__button"
+                , Attrs.disabled (String.length model.textInput == 0)
+                ]
+                [ text "Enter" ]
             ]
         ]
