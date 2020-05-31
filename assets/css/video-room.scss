@@ -16,10 +16,9 @@
 
 .empty {
   flex: 4;
-  display: flex;
+  display: grid;
   block-size: 100%;
-  justify-content: center;
-  align-items: center;
+  place-items: center;
 
   &__message {
     color: whitesmoke;

@@ -1,11 +1,10 @@
 @import './include-media.scss';
 
 .search {
-  display: flex;
+  display: grid;
   inline-size: 100%;
   min-block-size: 100vh;
-  align-items: center;
-  justify-content: center;
+  place-items: center;
 
   form {
     @include media('screen', '<tablet') {
