@@ -50,6 +50,7 @@ view model =
                     , onInput ChangeText
                     , Attrs.class "search__input"
                     , Attrs.name "room"
+                    , Attrs.autofocus True
                     ]
                     []
                 , button
