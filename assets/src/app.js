@@ -35,6 +35,14 @@ app.ports.enterRoom.subscribe(async (message) => {
       app.ports.messageReceived.send(message);
     },
   }).then(({ channel, sendTextMessage }) => {
+    app.ports.toggleCam.subscribe((value) => {
+      localMediaStream.getVideoTracks()[0].enabled = value;
+    })
+
+    app.ports.toggleMic.subscribe((value) => {
+      localMediaStream.getAudioTracks()[0].enabled = value;
+    })
+
     app.ports.remotePeerReadyToStream.subscribe(({ id, stream }) => {
       requestAnimationFrame(() => {
         const remoteVideo = document.querySelector(`[data-uuid="${id}"]`);

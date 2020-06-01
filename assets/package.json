@@ -4,11 +4,12 @@
   "license": "MIT",
   "scripts": {
     "deploy": "webpack --mode production",
-    "watch": "webpack --mode development --watch"
+    "watch": "webpack --mode development --watch --hot"
   },
   "dependencies": {
     "elm": "^0.19.1-3",
     "elm-webpack-loader": "^6.0.1",
+    "feather-icons": "^4.28.0",
     "normalize.css": "^8.0.1",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",

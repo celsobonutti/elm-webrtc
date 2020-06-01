@@ -32,6 +32,12 @@ port sendMessage : String -> Cmd msg
 port messageReceived : (Message -> msg) -> Sub msg
 
 
+port toggleMic : Bool -> Cmd msg
+
+
+port toggleCam : Bool -> Cmd msg
+
+
 type alias Message =
     { sender : Maybe String
     , content : String
@@ -42,6 +48,8 @@ type alias Model =
     { peers : OrderedSet String
     , messages : List Message
     , textInput : String
+    , mic : Bool
+    , cam : Bool
     , navKey : Nav.Key
     }
 
@@ -51,6 +59,8 @@ init room navKey =
     ( { peers = OrderedSet.empty
       , messages = []
       , textInput = ""
+      , mic = True
+      , cam = True
       , navKey = navKey
       }
     , enterRoom room
@@ -64,6 +74,8 @@ type Msg
     | ChangeText String
     | SendMessage
     | MessageReceived Message
+    | ToggleMic
+    | ToggleCam
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -114,6 +126,24 @@ update msg model =
             , Cmd.none
             )
 
+        ToggleMic ->
+            let
+                micState =
+                    not model.mic
+            in
+            ( { model | mic = micState }
+            , toggleMic micState
+            )
+
+        ToggleCam ->
+            let
+                camState =
+                    not model.cam
+            in
+            ( { model | cam = camState }
+            , toggleCam camState
+            )
+
 
 subscriptions : Sub Msg
 subscriptions =
@@ -129,21 +159,9 @@ view model =
     div
         [ Attrs.class "room"
         ]
-        [ if OrderedSet.isEmpty model.peers then
-            div [ Attrs.class "empty" ]
-                [ p
-                    [ Attrs.class "empty__message" ]
-                    [ text "There are no users in this room right now." ]
-                ]
-
-          else
-            Html.Keyed.node "div" [ Attrs.class "peers" ] (peerVideos model.peers)
+        [ viewPeers model
         , div [ Attrs.class "user" ]
-            [ userVideo "local-camera"
-                True
-                ""
-                "user__video"
-                []
+            [ lazy viewUser model
             , lazy viewMessages model.messages
             , lazy viewChatInput model
             ]
@@ -155,28 +173,51 @@ view model =
         ]
 
 
+viewPeers : Model -> Html Msg
+viewPeers model =
+    if OrderedSet.isEmpty model.peers then
+        div [ Attrs.class "empty" ]
+            [ p
+                [ Attrs.class "empty__message" ]
+                [ text "There are no users in this room right now." ]
+            ]
+
+    else
+        Html.Keyed.node "div" [ Attrs.class "peers" ] (peerVideos model.peers)
+
+
+viewUser : Model -> Html Msg
+viewUser model =
+    div [ Attrs.class "user__container" ]
+        [ userVideo "local-camera"
+            True
+            ""
+            "user__video"
+            []
+        , button [ onClick ToggleCam, Attrs.class "user__button" ] [ text "Cam" ]
+        , button [ onClick ToggleMic, Attrs.class "user__button user__button--right" ] [ text "Mic" ]
+        ]
+
+
 viewMessages : List Message -> Html Msg
 viewMessages messages =
-    let
-        messageList =
-            messages
-                |> List.map
-                    (\message ->
-                        case message.sender of
-                            Nothing ->
-                                div [ Attrs.class "message message--user" ]
-                                    [ p [ Attrs.class "message__sender message__sender--user" ] [ text "You" ]
-                                    , p [ Attrs.class "message__text" ] [ text message.content ]
-                                    ]
+    div [ Attrs.class "chat" ] (List.map viewMessage messages)
 
-                            Just senderId ->
-                                div [ Attrs.class "message" ]
-                                    [ p [ Attrs.class "message__sender" ] [ text senderId ]
-                                    , p [ Attrs.class "message__text" ] [ text message.content ]
-                                    ]
-                    )
-    in
-    div [ Attrs.class "chat" ] messageList
+
+viewMessage : Message -> Html Msg
+viewMessage message =
+    case message.sender of
+        Nothing ->
+            div [ Attrs.class "message message--user" ]
+                [ p [ Attrs.class "message__sender message__sender--user" ] [ text "You" ]
+                , p [ Attrs.class "message__text" ] [ text message.content ]
+                ]
+
+        Just senderId ->
+            div [ Attrs.class "message" ]
+                [ p [ Attrs.class "message__sender" ] [ text senderId ]
+                , p [ Attrs.class "message__text" ] [ text message.content ]
+                ]
 
 
 viewChatInput : Model -> Html Msg

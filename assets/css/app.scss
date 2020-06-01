@@ -31,5 +31,19 @@ body {
   }
 }
 
+.feather {
+  width: 24px;
+  height: 24px;
+  stroke: var(--success-color);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.feather--error {
+  stroke: var(--error-color);
+}
+
 @import 'include-media.scss', 'search-room.scss', 'video-room.scss';
 @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500&display=swap');
