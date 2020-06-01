@@ -1,4 +1,5 @@
-# Elm WebRTC (nickname `Infigo could be so much simpler`)
+# Elm WebRTC
+### `Infigo could be so much simpler`
 
 To start your Phoenix server:
 
