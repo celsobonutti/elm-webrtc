@@ -53,10 +53,6 @@
   display: flex;
   flex-direction: column;
 
-  @include media('screen', '<tablet') {
-    flex: 0;
-  }
-
   &__video {
     object-fit: cover;
     border: 2px solid black;
@@ -81,11 +77,15 @@
   flex-direction: column-reverse;
   overflow: hidden auto;
 
+  @include media('screen', '<tablet') {
+    display: none;
+  }
+
   &__form {
     min-block-size: 3rem;
     display: flex;
     @include media('screen', '<tablet') {
-      inline-size: 0;
+      display: none;
     }
   }
 
@@ -115,7 +115,6 @@
   display: flex;
   flex-direction: column;
   box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-
 
   &--user {
     background-color: #6d6d6d;
