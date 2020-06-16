@@ -1,7 +1,12 @@
 # Elm WebRTC
-### `Infigo could be so much simpler`
+## `Infigo could be so much simpler`
 
-To start your Phoenix server:
+A simple Elixir + Elm + TypeScript webRTC project for multi-room video calls, live at https://call.cel.so
+There may be some problems if two peers are not able to connect through a STUN server, since the project was done with the intention of learning more about webRTC and TURN servers are quite expensive to host just for fun.
+
+There are no environment variables since all of the credentials utilized are public.
+
+## Starting in your computer
 
   * Setup the project with `mix setup`
   * Start Phoenix endpoint with `mix phx.server`
