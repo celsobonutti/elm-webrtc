@@ -1,0 +1,20 @@
+{
+  "name": "call-cel-so",
+  "sources": [
+    {
+      "dir": "src",
+      "subdirs": true
+    }
+  ],
+  "bs-dependencies": ["bs-elm", "bucklescript-phx"],
+  "reason": { "react-jsx": 3 },
+  "package-specs": [
+    {
+      "module": "commonjs",
+      "in-source": true
+    }
+  ],
+  "suffix": ".bs.js",
+  "bsc-flags": ["-bs-super-errors"],
+  "refmt": 3
+}

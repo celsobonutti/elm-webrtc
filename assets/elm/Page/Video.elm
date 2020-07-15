@@ -8,6 +8,8 @@ import Html.Keyed exposing (node)
 import Html.Lazy exposing (lazy)
 import Json.Encode as Encode exposing (Value)
 import OrderedSet exposing (OrderedSet)
+import Svg exposing (svg, use)
+import Svg.Attributes as SvgAttrs
 import Route
 
 
@@ -194,8 +196,8 @@ viewUser model =
             ""
             "user__video"
             []
-        , button [ onClick ToggleCam, Attrs.class "user__button" ] [ text "Cam" ]
-        , button [ onClick ToggleMic, Attrs.class "user__button user__button--right" ] [ text "Mic" ]
+        , svg [ onClick ToggleCam, SvgAttrs.class "feather" ] [ use [ SvgAttrs.xlinkHref "/css/feather-sprite.svg#circle" ] [] ]
+        , svg [ onClick ToggleMic, SvgAttrs.class "user__button user__button--right" ] [ text "Mic" ]
         ]
 
 
