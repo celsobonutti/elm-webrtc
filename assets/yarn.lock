@@ -1420,18 +1420,6 @@ bs-platform@^8.0.3:
   resolved "https://registry.yarnpkg.com/bs-platform/-/bs-platform-8.0.3.tgz#574e41ec04fee381d4c400dac547735368caa48f"
   integrity sha512-I7wulOPM0/NGamwm9CDh9rGjW1oIKltPwwEIOJrL8DBFRXI8OFSACtWGlpaoOw76Xpf+KcVokr00keS2NlzA3A==
 
-bs-webapi-extra@^0.4.3:
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/bs-webapi-extra/-/bs-webapi-extra-0.4.3.tgz#f78e41d01632eda2c048065b0fb5f8a7cbf722c2"
-  integrity sha512-4REOEn5dgubPTuGRg7Rxse/8YwUNIF7GbIvJ+mtNyD1TOMXvQTzQDbPyi95uIwz0AKaOFKKwW46k18qOC/z6vA==
-  dependencies:
-    bs-webapi "^0.12.2"
-
-bs-webapi@^0.12.2:
-  version "0.12.2"
-  resolved "https://registry.yarnpkg.com/bs-webapi/-/bs-webapi-0.12.2.tgz#5d85130dafbee44fd1232a851c34f06b5ecdf3f9"
-  integrity sha512-DpdxZey/0GdbYK2d5dXP9SF9g7gdVwspnqQNonjxQ+HwlJOVcA4pkCyWE8Trxg7O2J2KekKAZLAgn3kjGB71pQ==
-
 bucklescript-phx@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/bucklescript-phx/-/bucklescript-phx-0.1.4.tgz#0e476b90ab98a833721d2756a6c981ac743d4750"
@@ -2713,6 +2701,11 @@ gensync@^1.0.0-beta.1:
   version "1.0.0-beta.1"
   resolved "https://registry.yarnpkg.com/gensync/-/gensync-1.0.0-beta.1.tgz#58f4361ff987e5ff6e1e7a210827aa371eaac269"
   integrity sha512-r8EC6NO1sngH/zdD9fiRDLdcgnbayXah+mLgManTaIZJqEC1MZstmnox8KpnI2/fxQwrp5OpCOYWLp4rBl4Jcg==
+
+gentype@^3.29.0:
+  version "3.29.0"
+  resolved "https://registry.yarnpkg.com/gentype/-/gentype-3.29.0.tgz#e2e399ae6109832eaba83bc9f40cc788f677fdf5"
+  integrity sha512-CWzf1dCqFGEUHyUeZmE8itY9wWodiuOxDHGYC32qHK+KzxbTqTIY/dce9nx59sS9UYQwOqVPUrjfQCqz2TxRxg==
 
 get-caller-file@^1.0.1:
   version "1.0.3"
@@ -4300,6 +4293,11 @@ phoenix@*:
   resolved "https://registry.yarnpkg.com/phoenix/-/phoenix-1.5.3.tgz#994487b67adc8ca683f76c41dca3271e476184bd"
   integrity sha512-wcyHTac54uxpyycKsdXfSpN+5YuYwaXQnkLahxseznDn+V5K3mIEJg+d6QhLBdrn5/0pWIPE7bBC6SBswnIvOg==
 
+phoenix@^1.5.4:
+  version "1.5.4"
+  resolved "https://registry.yarnpkg.com/phoenix/-/phoenix-1.5.4.tgz#d42bb537f03f55076b4e7a6757fe29318a8439f0"
+  integrity sha512-mTxseCKWDgrBQRIriqzvxL+QH5xruu6KQPqFdDx0jrdu/nqWCo914MLihVksn7SV2Bol3T+e/VtovJgC5UZT+w==
+
 "phoenix@file:../deps/phoenix":
   version "1.5.3"
 
@@ -4858,6 +4856,18 @@ readdirp@~3.4.0:
   integrity sha512-0xe001vZBnJEK+uKcj8qOhyAKPzIT+gStxWr3LCB0DwcXR5NZJ3IaC+yGnHCYzB/S7ov3m3EEbZI2zeNvX+hGQ==
   dependencies:
     picomatch "^2.2.1"
+
+reason-media-devices@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/reason-media-devices/-/reason-media-devices-0.1.0.tgz#2be1a7360f46965db4e69ca393b8bbec126f2fc8"
+  integrity sha512-jTAfWB8ZROZjvXKxiGMbdBxTrwM9XCP72qKz9S2HKQFF3G00XO4XLQBgICq0wzJPWPU7ty4io5Hfo4gcRpCiPg==
+
+reason-phoenix@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/reason-phoenix/-/reason-phoenix-0.1.0.tgz#fe4efd697a3e601f364f65c157266e3e59c68958"
+  integrity sha512-u9ZEcGt+AnL9kLiLFAleK4wGHAeY0+oTa6lCQsbtae26yODpTixQyLllqY5ssFAioxgKtYZWLlbzDZFQ1Q6dfw==
+  dependencies:
+    phoenix "^1.5.4"
 
 redent@^1.0.0:
   version "1.0.0"

@@ -1,13 +1,11 @@
 export const getMediaStream = async () => {
   try {
     const localMediaStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: {
-        facingMode: ['user', 'environment'],
-      },
+      audio: true
     });
     return localMediaStream;
-  } catch {
+  } catch(e) {
+    console.error(e);
     return [];
   }
 };

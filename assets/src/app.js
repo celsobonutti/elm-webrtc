@@ -4,7 +4,7 @@ import 'normalize.css';
 import 'phoenix_html';
 
 import { createConnection } from './webrtc';
-import { getMediaStream } from './media';
+import { getMediaStream } from './Media.bs';
 
 let client;
 

@@ -4,6 +4,7 @@ import {
   WebRTCMessage,
   TextMessage,
 } from './socket';
+import { sendWebRtcMessage } from './Socket.bs';
 import { Channel, Presence } from 'phoenix';
 import { v4 as uuid } from 'uuid';
 
@@ -19,10 +20,7 @@ type WebRTCConfig = {
 export const createConnection = async (config: WebRTCConfig) => {
   const userId = uuid();
 
-  const { channel, sendWebRtcMessage, sendTextMessage } = createChannel(
-    config.roomId,
-    userId
-  );
+  const { channel, sendTextMessage } = createChannel(config.roomId, userId);
 
   const peerMap = new Map<string, RTCPeerConnection>();
 
@@ -38,7 +36,6 @@ export const createConnection = async (config: WebRTCConfig) => {
         localMediaStream: config.localMediaStream,
         senderId: userId,
         targetId: id,
-        sendWebRtcMessage,
         starting: true,
       });
 
@@ -73,7 +70,6 @@ export const createConnection = async (config: WebRTCConfig) => {
         localMediaStream: config.localMediaStream,
         senderId: userId,
         targetId: body.senderId,
-        sendWebRtcMessage,
         starting: false,
       });
 
@@ -105,7 +101,6 @@ export const createConnection = async (config: WebRTCConfig) => {
 
 type PeerConnectionArgs = {
   channel: Channel;
-  sendWebRtcMessage: WebRTCMessageSender;
   localMediaStream: MediaStream;
   senderId: string;
   targetId: string;
@@ -115,7 +110,6 @@ type PeerConnectionArgs = {
 
 const createPeerConnection = async ({
   channel,
-  sendWebRtcMessage,
   localMediaStream,
   senderId,
   targetId,
@@ -138,7 +132,7 @@ const createPeerConnection = async ({
     try {
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
-      sendWebRtcMessage({
+      sendWebRtcMessage(channel, {
         type: 'video-offer',
         content: offer,
         senderId,
@@ -151,7 +145,7 @@ const createPeerConnection = async ({
 
   peerConnection.onicecandidate = ({ candidate }) => {
     if (candidate) {
-      sendWebRtcMessage({
+      sendWebRtcMessage(channel, {
         type: 'ice-candidate',
         content: candidate,
         senderId,
@@ -185,7 +179,7 @@ const createPeerConnection = async ({
     await peerConnection.setRemoteDescription(offer);
     const answer = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answer);
-    sendWebRtcMessage({
+    sendWebRtcMessage(channel, {
       type: 'video-answer',
       content: answer,
       senderId,

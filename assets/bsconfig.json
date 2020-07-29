@@ -6,11 +6,11 @@
       "subdirs": true
     }
   ],
-  "bs-dependencies": ["bs-elm", "bucklescript-phx"],
+  "bs-dependencies": ["bs-elm", "reason-phoenix", "reason-media-devices"],
   "reason": { "react-jsx": 3 },
   "package-specs": [
     {
-      "module": "commonjs",
+      "module": "es6",
       "in-source": true
     }
   ],
