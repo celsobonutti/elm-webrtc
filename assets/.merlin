@@ -1,14 +1,17 @@
 ####{BSB GENERATED: NO EDIT
-FLG -ppx '/home/dokkora/Fun/elm-webrtc/assets/node_modules/bs-platform/linux/bsc.exe -as-ppx -bs-jsx 3'
-S /home/dokkora/Fun/elm-webrtc/assets/node_modules/bs-platform/lib/ocaml
-B /home/dokkora/Fun/elm-webrtc/assets/node_modules/bs-platform/lib/ocaml
+FLG -ppx /Users/dokkora/fp-ssa/elm-webrtc/assets/node_modules/decco/ppx
+FLG -ppx '/Users/dokkora/fp-ssa/elm-webrtc/assets/node_modules/bs-platform/darwin/bsc.exe -as-ppx -bs-jsx 3'
+S /Users/dokkora/fp-ssa/elm-webrtc/assets/node_modules/bs-platform/lib/ocaml
+B /Users/dokkora/fp-ssa/elm-webrtc/assets/node_modules/bs-platform/lib/ocaml
 FLG -w +a-4-9-20-40-41-42-50-61-102
-S /home/dokkora/Fun/elm-webrtc/assets/node_modules/bs-elm/lib/ocaml
-B /home/dokkora/Fun/elm-webrtc/assets/node_modules/bs-elm/lib/ocaml
-S /home/dokkora/Fun/elm-webrtc/assets/node_modules/reason-phoenix/lib/ocaml
-B /home/dokkora/Fun/elm-webrtc/assets/node_modules/reason-phoenix/lib/ocaml
-S /home/dokkora/Fun/elm-webrtc/assets/node_modules/reason-media-devices/lib/ocaml
-B /home/dokkora/Fun/elm-webrtc/assets/node_modules/reason-media-devices/lib/ocaml
+S /Users/dokkora/fp-ssa/elm-webrtc/assets/node_modules/bs-elm/lib/ocaml
+B /Users/dokkora/fp-ssa/elm-webrtc/assets/node_modules/bs-elm/lib/ocaml
+S /Users/dokkora/fp-ssa/elm-webrtc/assets/node_modules/reason-phoenix/lib/ocaml
+B /Users/dokkora/fp-ssa/elm-webrtc/assets/node_modules/reason-phoenix/lib/ocaml
+S /Users/dokkora/fp-ssa/elm-webrtc/assets/node_modules/reason-media-devices/lib/ocaml
+B /Users/dokkora/fp-ssa/elm-webrtc/assets/node_modules/reason-media-devices/lib/ocaml
+S /Users/dokkora/fp-ssa/elm-webrtc/assets/node_modules/decco/lib/ocaml
+B /Users/dokkora/fp-ssa/elm-webrtc/assets/node_modules/decco/lib/ocaml
 S src
 B lib/bs/src
 ####BSB GENERATED: NO EDIT}

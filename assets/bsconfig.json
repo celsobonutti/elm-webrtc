@@ -6,7 +6,7 @@
       "subdirs": true
     }
   ],
-  "bs-dependencies": ["bs-elm", "reason-phoenix", "reason-media-devices"],
+  "bs-dependencies": ["bs-elm", "reason-phoenix", "reason-media-devices", "decco"],
   "reason": { "react-jsx": 3 },
   "package-specs": [
     {
@@ -14,6 +14,7 @@
       "in-source": true
     }
   ],
+  "ppx-flags": ["decco/ppx"],
   "suffix": ".bs.js",
   "bsc-flags": ["-bs-super-errors"],
   "refmt": 3
